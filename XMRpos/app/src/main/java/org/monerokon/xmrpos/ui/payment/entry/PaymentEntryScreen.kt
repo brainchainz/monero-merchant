@@ -2,34 +2,47 @@
 package org.monerokon.xmrpos.ui.payment.entry
 
 import CurrencyConverterCard
+import androidx.activity.result.launch
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.Clear
-import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.color
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
+import org.monerokon.xmrpos.R
 import org.monerokon.xmrpos.ui.common.composables.CustomAlertDialog
 
 // PaymentEntryScreenRoot
@@ -74,7 +87,7 @@ fun PaymentEntryScreen(
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Box(
-            modifier = Modifier.padding(start = 24.dp, top = innerPadding.calculateTopPadding() + 24.dp, end = 24.dp, bottom = innerPadding.calculateBottomPadding() + 24.dp )
+            modifier = Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 24.dp )
         ) {
             Column (
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +112,7 @@ fun PaymentEntryScreen(
                                     modifier = Modifier.
                                     then(Modifier.size(40.dp)),
                         ) {
-                            Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Settings", modifier = Modifier.size(20.dp))
+                            Icon(painterResource(R.drawable.settings_24px), contentDescription = "Settings", modifier = Modifier.size(20.dp))
                         }
                     }
                     Spacer(modifier = Modifier.height(30.dp))
@@ -137,7 +150,10 @@ fun PaymentEntryScreen(
                     dialogText = errorMessage,
                     confirmButtonText = "Ok",
                     dismissButtonText = null,
-                    icon = Icons.Default.Warning
+                    icon = {Icon(
+                        painter = painterResource(R.drawable.warning_24px),
+                        contentDescription = "Warning",
+                    )}
                 )
             }
         }
@@ -164,7 +180,7 @@ fun OpenSettingsDialog(
     var currentPinCode by remember { mutableStateOf("") }
     AlertDialog(
         icon = {
-            Icon(Icons.Default.Lock, contentDescription = "Locked")
+            Icon(painter = painterResource(R.drawable.lock_24px), contentDescription = "Locked")
         },
         title = {
             Text(text = "Settings locked")
@@ -335,46 +351,52 @@ fun PaymentEntryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 1. Create an InteractionSource to track the pressed state.
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // 2. Animate the elevation for a smoother transition.
-    val elevation by animateDpAsState(
-        targetValue = if (isPressed) 8.dp else 0.dp, // Shadow appears on press
-        label = "elevationAnimation"
-    )
+    val shadowAlpha = remember { Animatable(0f) }
+    val coroutineScope = rememberCoroutineScope()
+    val shadowColor = MaterialTheme.colorScheme.secondary
 
     Surface(
         modifier = modifier
             .height(64.dp)
-            // 3. Apply the animated shadow.
-            .shadow(
-                elevation = elevation,
+            .dropShadow(
                 shape = MaterialTheme.shapes.medium,
-                ambientColor = MaterialTheme.colorScheme.secondary,
-                spotColor = MaterialTheme.colorScheme.secondary,
+                block = {
+                    radius = 50f
+                    color = shadowColor.copy(alpha = shadowAlpha.value)
+                }
             )
-            // 4. Use the clickable modifier.
             .clickable(
-                interactionSource = interactionSource,
-                // Pass null to disable the default ripple effect.
+                interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    coroutineScope.launch {
+                        // Animate TO 1f (glow in) very quickly.
+                        shadowAlpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 100, easing = EaseOut)
+                        )
+                        // Then, immediately start the animation back TO 0f (glow out) slowly.
+                        shadowAlpha.animateTo(
+                            targetValue = 0f,
+                            animationSpec = tween(durationMillis = 300, easing = EaseInOut)
+                        )
+                    }
+                    onClick()
+                }
             ),
-        // Use standard button colors and shape for consistency.
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
-        // Center the text within the Surface.
         Box(
             contentAlignment = Alignment.Center
         ) {
-            Text(text = text, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary) // titleLarge is often better for large buttons
+            Text(text = text, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
+
+
+
 
 // PaymentEntryControlButtons (backspace, clear, and forward)
 @Composable
@@ -388,7 +410,7 @@ fun PaymentEntryControlButtons(
         horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
     ) {
         PaymentEntryControlButton(
-            icon = Icons.Rounded.Clear,
+            icon = painterResource(R.drawable.close_24px),
             iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
             contentDescription = "Clear",
             onClick = onClearClick,
@@ -396,7 +418,7 @@ fun PaymentEntryControlButtons(
             modifier = Modifier.weight(1f)
         )
         PaymentEntryControlButton(
-            icon = Icons.AutoMirrored.Rounded.ArrowBack,
+            icon = painterResource(R.drawable.arrow_back_24px),
             iconColor = Color(0xFFFFFFFF),
             contentDescription = "Back",
             onClick = onBackspaceClick,
@@ -404,7 +426,7 @@ fun PaymentEntryControlButtons(
             modifier = Modifier.weight(1f)
         )
         PaymentEntryControlButton(
-            icon = Icons.Rounded.Done,
+            icon = painterResource(R.drawable.check_24px),
             iconColor = Color(0xFFFFFFFF),
             contentDescription = "Done",
             onClick = onSubmitClick,
@@ -417,7 +439,7 @@ fun PaymentEntryControlButtons(
 // PaymentEntryControlButton
 @Composable
 fun PaymentEntryControlButton(
-    icon: ImageVector,
+    icon: Painter,
     iconColor: Color,
     contentDescription: String?,
     containerColor: Color,
@@ -431,7 +453,7 @@ fun PaymentEntryControlButton(
         ),
         modifier = modifier.height(64.dp)
     ) {
-        Icon(imageVector = icon, contentDescription = contentDescription, tint = iconColor, modifier = Modifier.size(28.dp))
+        Icon(painter = icon, contentDescription = contentDescription, tint = iconColor, modifier = Modifier.size(28.dp))
     }
 }
 

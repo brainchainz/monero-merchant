@@ -51,71 +51,65 @@ fun NavGraphRoot(
     navController: NavHostController = rememberNavController(),
     startDestination: Any,
 ) {
-    Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
-        Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                enterTransition = {
-                    slideIn(initialOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
-                },
-                exitTransition = {
-                    slideOut(targetOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
-                },
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable<Login> {
-                    val loginViewModel: LoginViewModel = hiltViewModel()
-                    LoginScreenRoot(viewModel = loginViewModel, navController = navController)
-                }
-                composable<PaymentEntry> {
-                    val paymentEntryViewModel: PaymentEntryViewModel =  hiltViewModel()
-                    PaymentEntryScreenRoot(
-                        viewModel = paymentEntryViewModel,
-                        navController = navController
-                    )
-                }
-                composable<PaymentCheckout> {
-                    val args = it.toRoute<PaymentCheckout>()
-                    val paymentCheckoutViewModel: PaymentCheckoutViewModel = hiltViewModel()
-                    PaymentCheckoutScreenRoot(viewModel = paymentCheckoutViewModel, navController = navController, fiatAmount = args.fiatAmount, primaryFiatCurrency = args.primaryFiatCurrency)
-                }
-                composable<PaymentSuccess> {
-                    val args = it.toRoute<PaymentSuccess>()
-                    val paymentSuccessViewModel: PaymentSuccessViewModel = hiltViewModel()
-                    PaymentSuccessScreenRoot(viewModel = paymentSuccessViewModel, navController = navController, fiatAmount = args.fiatAmount, primaryFiatCurrency = args.primaryFiatCurrency, txId = args.txId, xmrAmount = args.xmrAmount, exchangeRate = args.exchangeRate, timestamp = args.timestamp, showPrintReceipt = args.showPrintReceipt)
-                }
-                composable<Settings> {
-                    val mainSettingsViewModel: MainSettingsViewModel = viewModel()
-                    MainSettingsScreenRoot(viewModel = mainSettingsViewModel, navController = navController)
-                }
-                composable<CompanyInformation> {
-                    val companyInformationViewModel: CompanyInformationViewModel = hiltViewModel()
-                    CompanyInformationScreenRoot(viewModel = companyInformationViewModel, navController = navController)
-                }
-                composable<FiatCurrencies> {
-                    val fiatCurrenciesViewModel: FiatCurrenciesViewModel = hiltViewModel()
-                    FiatCurrenciesScreenRoot(viewModel = fiatCurrenciesViewModel, navController = navController)
-                }
-                composable<Security> {
-                    val securityViewModel: SecurityViewModel = hiltViewModel()
-                    SecurityScreenRoot(viewModel = securityViewModel, navController = navController)
-                }
-                composable<TransactionHistory> {
-                    val transactionHistoryViewModel: TransactionHistoryViewModel = hiltViewModel()
-                    TransactionHistoryScreenRoot(viewModel = transactionHistoryViewModel, navController = navController)
-                }
-                composable<Backend> {
-                    val backendViewModel: BackendViewModel = hiltViewModel()
-                    BackendScreenRoot(viewModel = backendViewModel, navController = navController)
-                }
-                composable<PrinterSettings> {
-                    val printerSettingsViewModel: PrinterSettingsViewModel = hiltViewModel()
-                    PrinterSettingsScreenRoot(viewModel = printerSettingsViewModel, navController = navController)
-                }
-            }
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        enterTransition = {
+            slideIn(initialOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
+        },
+        exitTransition = {
+            slideOut(targetOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
+        },
+    ) {
+        composable<Login> {
+            val loginViewModel: LoginViewModel = hiltViewModel()
+            LoginScreenRoot(viewModel = loginViewModel, navController = navController)
         }
-
+        composable<PaymentEntry> {
+            val paymentEntryViewModel: PaymentEntryViewModel =  hiltViewModel()
+            PaymentEntryScreenRoot(
+                viewModel = paymentEntryViewModel,
+                navController = navController
+            )
+        }
+        composable<PaymentCheckout> {
+            val args = it.toRoute<PaymentCheckout>()
+            val paymentCheckoutViewModel: PaymentCheckoutViewModel = hiltViewModel()
+            PaymentCheckoutScreenRoot(viewModel = paymentCheckoutViewModel, navController = navController, fiatAmount = args.fiatAmount, primaryFiatCurrency = args.primaryFiatCurrency)
+        }
+        composable<PaymentSuccess> {
+            val args = it.toRoute<PaymentSuccess>()
+            val paymentSuccessViewModel: PaymentSuccessViewModel = hiltViewModel()
+            PaymentSuccessScreenRoot(viewModel = paymentSuccessViewModel, navController = navController, fiatAmount = args.fiatAmount, primaryFiatCurrency = args.primaryFiatCurrency, txId = args.txId, xmrAmount = args.xmrAmount, exchangeRate = args.exchangeRate, timestamp = args.timestamp, showPrintReceipt = args.showPrintReceipt)
+        }
+        composable<Settings> {
+            val mainSettingsViewModel: MainSettingsViewModel = viewModel()
+            MainSettingsScreenRoot(viewModel = mainSettingsViewModel, navController = navController)
+        }
+        composable<CompanyInformation> {
+            val companyInformationViewModel: CompanyInformationViewModel = hiltViewModel()
+            CompanyInformationScreenRoot(viewModel = companyInformationViewModel, navController = navController)
+        }
+        composable<FiatCurrencies> {
+            val fiatCurrenciesViewModel: FiatCurrenciesViewModel = hiltViewModel()
+            FiatCurrenciesScreenRoot(viewModel = fiatCurrenciesViewModel, navController = navController)
+        }
+        composable<Security> {
+            val securityViewModel: SecurityViewModel = hiltViewModel()
+            SecurityScreenRoot(viewModel = securityViewModel, navController = navController)
+        }
+        composable<TransactionHistory> {
+            val transactionHistoryViewModel: TransactionHistoryViewModel = hiltViewModel()
+            TransactionHistoryScreenRoot(viewModel = transactionHistoryViewModel, navController = navController)
+        }
+        composable<Backend> {
+            val backendViewModel: BackendViewModel = hiltViewModel()
+            BackendScreenRoot(viewModel = backendViewModel, navController = navController)
+        }
+        composable<PrinterSettings> {
+            val printerSettingsViewModel: PrinterSettingsViewModel = hiltViewModel()
+            PrinterSettingsScreenRoot(viewModel = printerSettingsViewModel, navController = navController)
+        }
     }
 }
 

@@ -5,16 +5,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import org.monerokon.xmrpos.R
 
 @Composable
 fun SecurityScreenRoot(viewModel: SecurityViewModel, navController: NavHostController) {
@@ -54,7 +54,7 @@ fun SecurityScreen(
                 navigationIcon = {
                     IconButton(onClick = {onBackClick()}) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(id = R.drawable.arrow_back_24px),
                             contentDescription = "Go back to previous screen"
                         )
                     }

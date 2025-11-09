@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -33,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import org.monerokon.xmrpos.ui.common.composables.CustomAlertDialog
-import org.monerokon.xmrpos.ui.settings.backend.BackendViewModel
+import org.monerokon.xmrpos.R
+
 
 @Composable
 fun BackendScreenRoot(viewModel: BackendViewModel, navController: NavHostController) {
@@ -81,7 +80,7 @@ fun BackendScreen(
                 navigationIcon = {
                     IconButton(onClick = {onBackClick()}) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(R.drawable.arrow_back_24px),
                             contentDescription = "Go back to previous screen"
                         )
                     }
@@ -135,7 +134,7 @@ fun BackendScreen(
                 dialogText = healthStatus,
                 confirmButtonText = "OK",
                 dismissButtonText = null,
-                icon = Icons.Default.Info
+                icon = {Icon(painter = painterResource(R.drawable.info_24px), contentDescription = "info")}
             )
         }
     }

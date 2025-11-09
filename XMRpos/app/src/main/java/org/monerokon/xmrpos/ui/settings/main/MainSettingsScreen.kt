@@ -6,16 +6,16 @@ import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import org.monerokon.xmrpos.R
+
 
 @Composable
 fun MainSettingsScreenRoot(viewModel: MainSettingsViewModel, navController: NavHostController) {
@@ -69,7 +69,7 @@ fun MainSettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = {onBackClick()}) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(id = R.drawable.arrow_back_24px),
                             contentDescription = "Go back to previous screen"
                         )
                     }
@@ -131,7 +131,7 @@ fun SettingsCard(
             Text(text)
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                painter = painterResource(id = R.drawable.arrow_forward_24px),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )

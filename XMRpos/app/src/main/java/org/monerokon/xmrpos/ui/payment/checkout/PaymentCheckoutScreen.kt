@@ -8,8 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -112,7 +110,7 @@ fun PaymentCheckoutScreen(
                         dialogText = errorMessage,
                         confirmButtonText = "Ok",
                         dismissButtonText = null,
-                        icon = Icons.Default.Warning
+                        icon = {Icon(painter = painterResource(R.drawable.arrow_back_24px), contentDescription = "Go back")},
                     )
                 }
             }
@@ -128,7 +126,7 @@ fun PaymentCheckoutScreen(
                         dialogText = "If you go back while the customer is paying, the payment will not be confirmed in the app. Please only go back if the customer has not started paying yet.",
                         confirmButtonText = "Go back",
                         dismissButtonText = "Stay here",
-                        icon = Icons.Default.Warning
+                        icon = {Icon(painter = painterResource(R.drawable.warning_24px), contentDescription = "Warning")},
                     )
                 }
             }

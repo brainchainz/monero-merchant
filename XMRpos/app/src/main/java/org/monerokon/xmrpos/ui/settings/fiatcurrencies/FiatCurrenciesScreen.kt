@@ -10,25 +10,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import org.monerokon.xmrpos.ui.settings.companyinformation.CompanyInformationViewModel
 import kotlin.math.exp
+import org.monerokon.xmrpos.R
 
 @Composable
 fun FiatCurrenciesScreenRoot(viewModel: FiatCurrenciesViewModel, navController: NavHostController) {
@@ -70,7 +64,7 @@ fun FiatCurrenciesScreen(
                 navigationIcon = {
                     IconButton(onClick = {onBackClick()}) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(id = R.drawable.arrow_back_24px),
                             contentDescription = "Go back to previous screen"
                         )
                     }
@@ -155,19 +149,19 @@ fun ReferenceFiatCurrencyRow(
         ) {
             IconButton(onClick = { onMoveReferenceFiatCurrencyUpClick() }) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
+                    painter = painterResource(id = R.drawable.keyboard_arrow_up_24px),
                     contentDescription = "Remove reference fiat currency",
                 )
             }
             IconButton(onClick = { onMoveReferenceFiatCurrencyDownClick() }) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
+                    painter = painterResource(id = R.drawable.keyboard_arrow_down_24px),
                     contentDescription = "Remove reference fiat currency",
                 )
             }
             IconButton(onClick = { onRemoveClick() }) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
+                    painter = painterResource(id = R.drawable.delete_24px),
                     contentDescription = "Remove reference fiat currency",
                 )
             }

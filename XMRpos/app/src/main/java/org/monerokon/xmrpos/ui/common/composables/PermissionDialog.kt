@@ -1,13 +1,13 @@
 package org.monerokon.xmrpos.ui.common.composables
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.sharp.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import org.monerokon.xmrpos.R
 
 @Composable
 fun PermissionDialog(
@@ -20,7 +20,7 @@ fun PermissionDialog(
 ) {
     AlertDialog(
         icon = {
-            Icon(imageVector = Icons.Sharp.Info, contentDescription = "Info")
+            Icon(painter = painterResource(id = R.drawable.info_24px), contentDescription = "Info")
         },
         title = {
             Text(text = "Permission required")

@@ -5,7 +5,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun CustomAlertDialog(
@@ -15,13 +14,10 @@ fun CustomAlertDialog(
     dialogText: String,
     confirmButtonText: String?,
     dismissButtonText: String?,
-    icon: ImageVector,
-    iconContentDescription: String = "Icon",
+    icon: @Composable () ->  Unit,
 ) {
     AlertDialog(
-        icon = {
-            Icon(icon, contentDescription = iconContentDescription)
-        },
+        icon = icon,
         title = {
             Text(text = dialogTitle)
         },

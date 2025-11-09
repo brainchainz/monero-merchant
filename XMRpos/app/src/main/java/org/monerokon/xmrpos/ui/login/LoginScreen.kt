@@ -1,31 +1,22 @@
 // LoginScreen.kt
 package org.monerokon.xmrpos.ui.payment.login
 
-import CurrencyConverterCard
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.rounded.Clear
-import androidx.compose.material.icons.rounded.Done
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import org.monerokon.xmrpos.ui.common.composables.CustomAlertDialog
+import org.monerokon.xmrpos.R
 
 // LoginScreenRoot
 @Composable
@@ -105,7 +96,9 @@ fun LoginScreen(
                     dialogText = errorMessage,
                     confirmButtonText = "Ok",
                     dismissButtonText = null,
-                    icon = Icons.Default.Warning
+                    icon = {
+                        Icon(painter = painterResource(R.drawable.warning_24px), contentDescription = "Warning")
+                    }
                 )
             }
         }

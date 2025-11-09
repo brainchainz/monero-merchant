@@ -9,16 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import org.monerokon.xmrpos.R
 import org.monerokon.xmrpos.ui.common.composables.DisplayImageFromFile
 import java.io.File
 
@@ -75,7 +73,7 @@ fun CompanyInformationScreen(
                 navigationIcon = {
                     IconButton(onClick = {onBackClick()}) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            painter = painterResource(id = R.drawable.arrow_back_24px),
                             contentDescription = "Go back to previous screen"
                         )
                     }
@@ -102,13 +100,13 @@ fun CompanyInformationScreen(
                     if (companyLogo != null) {
                         DisplayImageFromFile(companyLogo)
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            painter = painterResource(id = R.drawable.delete_24px),
                             contentDescription = "Delete company logo",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            painter = painterResource(id = R.drawable.add_2_24px),
                             contentDescription = "Upload company logo",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
