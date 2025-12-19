@@ -140,7 +140,6 @@ fun BackendScreen(
                 dialogText = if (healthStatus is DataResult.Failure) healthStatus.message else null,
                 dialogContent = { if (healthStatus is DataResult.Success) HealthView(healthStatus) else null },
                 confirmButtonText = "Ok",
-                dismissButtonText = "Go back",
                 icon = {modifier -> Icon(painter = painterResource(R.drawable.info_24px), tint = MaterialTheme.colorScheme.secondary, contentDescription = "info", modifier = modifier)}
             )
         }
@@ -155,39 +154,39 @@ fun HealthView(healthStatus: DataResult.Success<BackendHealthResponse>) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Status backend: " + healthStatus.data.status, style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
+            Text("Backend: " + statusToReadable(healthStatus.data.status), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
             HealthIndicator(status = healthStatus.data.status)
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(start = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Status PostgreSQL: " + healthStatus.data.services.postgresql, style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
+            Text("PostgreSQL: " + statusToReadable(ok = healthStatus.data.services.postgresql), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
             HealthIndicator(ok = healthStatus.data.services.postgresql)
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(start = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Status MoneroPay: " + healthStatus.data.services.moneroPay.status, style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
+            Text("MoneroPay: " + statusToReadable(healthStatus.data.services.moneroPay.status), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
             HealthIndicator(status = healthStatus.data.services.moneroPay.status)
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(start = 32.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Status WalletRPC: " + healthStatus.data.services.moneroPay.services.walletRpc, style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
+            Text("WalletRPC (MoneroPay): " + statusToReadable(ok = healthStatus.data.services.moneroPay.services.walletRpc), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
             HealthIndicator(ok = healthStatus.data.services.moneroPay.services.walletRpc)
         }
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(start = 32.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Status PostgreSQL: " + healthStatus.data.services.moneroPay.services.postgresql, style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
+            Text("PostgreSQL (MoneroPay): " + statusToReadable(ok = healthStatus.data.services.moneroPay.services.postgresql), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primaryContainer))
             HealthIndicator(ok = healthStatus.data.services.moneroPay.services.postgresql)
         }
     }
@@ -205,4 +204,12 @@ fun HealthIndicator(status: Int? = null, ok: Boolean? = null) {
                 shape = CircleShape
             )
     )
+}
+
+fun statusToReadable(status: Int? = null, ok: Boolean? = null): String {
+    if (status == 200 || ok == true) {
+        return "OK"
+    }
+    return "ERROR $status"
+
 }
