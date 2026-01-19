@@ -32,7 +32,7 @@ class CompanyInformationViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     var companyLogo: File? by mutableStateOf(null)

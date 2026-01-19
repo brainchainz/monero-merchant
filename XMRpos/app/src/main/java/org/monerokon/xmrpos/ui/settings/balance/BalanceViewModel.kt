@@ -33,7 +33,7 @@ class BalanceViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     var vendorBalance: DataResult<BackendBalanceVendorResponse>? by mutableStateOf(null)

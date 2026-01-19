@@ -1,10 +1,19 @@
 // NavGraph.kt
 package org.monerokon.xmrpos.ui
 
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,11 +66,47 @@ fun NavGraphRoot(
         navController = navController,
         startDestination = startDestination,
         enterTransition = {
-            slideIn(initialOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            ) + fadeIn(
+                initialAlpha = 0.5f,
+                animationSpec = tween(200, easing = EaseOut)
+            )
         },
         exitTransition = {
-            slideOut(targetOffset = { fullSize -> IntOffset(fullSize.width, 0) }, animationSpec = tween(300, easing = FastOutSlowInEasing))
+            scaleOut(
+                targetScale = 0.95f,
+                animationSpec = tween(200, easing = EaseOut)
+            ) + fadeOut(
+                targetAlpha = 0.7f,
+                animationSpec = tween(200)
+            )
         },
+        popEnterTransition = {
+            scaleIn(
+                initialScale = 0.95f,
+                animationSpec = tween(200, easing = EaseOut)
+            ) + fadeIn(
+                initialAlpha = 0.7f,
+                animationSpec = tween(200)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            ) + fadeOut(
+                targetAlpha = 0.5f,
+                animationSpec = tween(150)
+            )
+        }
     ) {
         composable<Login> {
             val loginViewModel: LoginViewModel = hiltViewModel()

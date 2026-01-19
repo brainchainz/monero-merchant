@@ -33,7 +33,7 @@ class BackendViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     val confOptions = listOf("0-conf", "1-conf", "10-conf")

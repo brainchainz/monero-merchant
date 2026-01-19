@@ -22,7 +22,7 @@ class MainSettingsViewModel (private val savedStateHandle: SavedStateHandle): Vi
     }
 
     fun navigateToPayment() {
-        navController?.navigate(PaymentEntry)
+        navController?.popBackStack()
     }
 
     fun navigateToCompanyInformation() {

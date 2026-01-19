@@ -61,6 +61,6 @@ class TransactionHistoryViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 }

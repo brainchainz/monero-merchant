@@ -24,7 +24,7 @@ class SecurityViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     var requirePinCodeOnAppStart by mutableStateOf(false)

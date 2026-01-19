@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.auth)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.compose.animation)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation(libs.hilt.android)

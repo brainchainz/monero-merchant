@@ -41,7 +41,7 @@ class PrinterSettingsViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     val manager: UsbManager = ContextCompat.getSystemService(context, UsbManager::class.java) as UsbManager

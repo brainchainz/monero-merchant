@@ -38,7 +38,7 @@ class FiatCurrenciesViewModel @Inject constructor(
     }
 
     fun navigateToMainSettings() {
-        navController?.navigate(Settings)
+        navController?.popBackStack()
     }
 
     var primaryFiatCurrency: String by mutableStateOf("")
