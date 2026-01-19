@@ -33,6 +33,8 @@ import org.monerokon.xmrpos.ui.payment.success.PaymentSuccessScreenRoot
 import org.monerokon.xmrpos.ui.payment.success.PaymentSuccessViewModel
 import org.monerokon.xmrpos.ui.settings.backend.BackendScreenRoot
 import org.monerokon.xmrpos.ui.settings.backend.BackendViewModel
+import org.monerokon.xmrpos.ui.settings.balance.BalanceScreenRoot
+import org.monerokon.xmrpos.ui.settings.balance.BalanceViewModel
 import org.monerokon.xmrpos.ui.settings.companyinformation.CompanyInformationScreenRoot
 import org.monerokon.xmrpos.ui.settings.companyinformation.CompanyInformationViewModel
 import org.monerokon.xmrpos.ui.settings.fiatcurrencies.FiatCurrenciesScreenRoot
@@ -110,6 +112,10 @@ fun NavGraphRoot(
             val printerSettingsViewModel: PrinterSettingsViewModel = hiltViewModel()
             PrinterSettingsScreenRoot(viewModel = printerSettingsViewModel, navController = navController)
         }
+        composable<Balance> {
+            val balanceViewModel: BalanceViewModel = hiltViewModel()
+            BalanceScreenRoot(viewModel = balanceViewModel, navController = navController)
+        }
     }
 }
 
@@ -158,3 +164,6 @@ object Backend
 
 @Serializable
 object PrinterSettings
+
+@Serializable
+object Balance

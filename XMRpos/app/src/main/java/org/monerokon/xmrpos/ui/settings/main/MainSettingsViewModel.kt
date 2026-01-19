@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import org.monerokon.xmrpos.ui.Backend
+import org.monerokon.xmrpos.ui.Balance
 import org.monerokon.xmrpos.ui.CompanyInformation
 import org.monerokon.xmrpos.ui.FiatCurrencies
 import org.monerokon.xmrpos.ui.PaymentEntry
@@ -46,6 +47,10 @@ class MainSettingsViewModel (private val savedStateHandle: SavedStateHandle): Vi
 
     fun navigateToPrinterSettings() {
         navController?.navigate(PrinterSettings)
+    }
+
+    fun navigateToBalance() {
+        navController?.navigate(Balance)
     }
 }
 

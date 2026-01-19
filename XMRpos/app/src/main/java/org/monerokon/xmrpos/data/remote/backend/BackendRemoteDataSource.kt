@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.json.Json
+import org.monerokon.xmrpos.data.remote.backend.model.BackendBalanceVendorResponse
 import org.monerokon.xmrpos.data.remote.backend.model.BackendCreateTransactionRequest
 import org.monerokon.xmrpos.data.remote.backend.model.BackendCreateTransactionResponse
 import org.monerokon.xmrpos.data.remote.backend.model.BackendHealthResponse
@@ -36,6 +37,15 @@ class BackendRemoteDataSource @Inject constructor(
     suspend fun fetchHealth(): DataResult<BackendHealthResponse> {
         return try {
             val response = httpClient.get("misc/health").body<BackendHealthResponse>()
+            DataResult.Success(response)
+        } catch (e: Exception) {
+            DataResult.Failure(message = e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun fetchVendorBalance(): DataResult<BackendBalanceVendorResponse> {
+        return try {
+            val response = httpClient.get("vendor/balance").body<BackendBalanceVendorResponse>()
             DataResult.Success(response)
         } catch (e: Exception) {
             DataResult.Failure(message = e.message ?: "Unknown error")
@@ -135,6 +145,5 @@ class BackendRemoteDataSource @Inject constructor(
                 Log.d("WebSocketDS", "WebSocket flow processing ended for transaction ID: $id")
             }
         }
-
     }
 }

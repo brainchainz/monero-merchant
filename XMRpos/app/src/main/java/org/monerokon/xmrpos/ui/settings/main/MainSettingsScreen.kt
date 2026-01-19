@@ -30,7 +30,8 @@ fun MainSettingsScreenRoot(viewModel: MainSettingsViewModel, navController: NavH
         navigateToSecurity = viewModel::navigateToSecurity,
         navigateToTransactionHistory = viewModel::navigateToTransactionHistory,
         navigateToBackend = viewModel::navigateToBackend,
-        navigateToPrinterSettings = viewModel::navigateToPrinterSettings
+        navigateToPrinterSettings = viewModel::navigateToPrinterSettings,
+        navigateToBalance = viewModel::navigateToBalance
     )
 }
 
@@ -43,7 +44,8 @@ fun MainSettingsScreen(
     navigateToSecurity: () -> Unit,
     navigateToTransactionHistory: () -> Unit,
     navigateToBackend: () -> Unit,
-    navigateToPrinterSettings: () -> Unit
+    navigateToPrinterSettings: () -> Unit,
+    navigateToBalance: () -> Unit
 ) {
     val context = LocalContext.current
     val versionName = remember(context.packageName) {
@@ -88,6 +90,8 @@ fun MainSettingsScreen(
             SettingsCard(text = "Backend", onClick = {navigateToBackend()})
             Spacer(modifier = Modifier.height(10.dp))
             SettingsCard(text = "Printer settings", onClick = {navigateToPrinterSettings()})
+            Spacer(modifier = Modifier.height(10.dp))
+            SettingsCard(text = "Balance", onClick = {navigateToBalance()})
             Spacer(modifier = Modifier.height(10.dp))
         }
     }

@@ -108,10 +108,6 @@ type createPosResponse struct {
 	VendorID uint   `json:"vendor_id"`
 }
 
-type vendorBalanceResponse struct {
-	Balance int64 `json:"balance"`
-}
-
 func (h *VendorHandler) CreatePos(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -158,13 +154,19 @@ func (h *VendorHandler) CreatePos(w http.ResponseWriter, r *http.Request) {
 	io.Copy(io.Discard, r.Body)
 }
 
+type vendorBalanceResponse struct {
+	Balance int64 `json:"balance"`
+}
+
+// IMPORTANT: This is also used by the POS to get the vendor's balance right now.
+// As we want vendor balance and not balance per POS, this makes sense right now.
 func (h *VendorHandler) GetAccountBalance(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 	r = r.WithContext(ctx)
 
 	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
-	if !ok || role != "vendor" {
+	if !ok || !(role == "vendor" || role == "pos") {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
