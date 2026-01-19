@@ -137,6 +137,7 @@ fun PaymentEntryScreen(
                     dismissButtonText = null,
                     icon = {Icon(
                         painter = painterResource(R.drawable.warning_24px),
+                        tint = MaterialTheme.colorScheme.primary,
                         contentDescription = "Warning",
                     )}
                 )
@@ -165,7 +166,7 @@ fun OpenSettingsDialog(
     var currentPinCode by remember { mutableStateOf("") }
     AlertDialog(
         icon = {
-            Icon(painter = painterResource(R.drawable.lock_24px), contentDescription = "Locked")
+            Icon(painter = painterResource(R.drawable.lock_24px), tint = MaterialTheme.colorScheme.primary, contentDescription = "Locked")
         },
         title = {
             Text(text = "Settings locked")
