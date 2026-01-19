@@ -353,7 +353,7 @@ fun PaymentEntryButton(
 ) {
     val shadowAlpha = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
-    val shadowColor = MaterialTheme.colorScheme.secondary
+    val shadowColor = MaterialTheme.colorScheme.primary
 
     Surface(
         modifier = modifier
@@ -429,7 +429,7 @@ fun PaymentEntryControlButtons(
             iconColor = Color(0xFFFFFFFF),
             contentDescription = "Done",
             onClick = onSubmitClick,
-            containerColor = MaterialTheme.colorScheme.secondary,
+            containerColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier.weight(1f)
         )
     }

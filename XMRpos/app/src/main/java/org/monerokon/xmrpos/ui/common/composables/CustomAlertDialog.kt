@@ -53,7 +53,6 @@ fun CustomAlertDialog(
     dismissButtonText: String? = null,
     icon: @Composable (Modifier) -> Unit,
 ) {
-    // 1. Use the base `Dialog` composable. It provides the scrim and dismissal handling.
     Dialog(
         onDismissRequest = onDismissRequest ?: {},
         properties = DialogProperties(
@@ -69,9 +68,7 @@ fun CustomAlertDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(40.dp)
             ) {
-                // This Box is still useful for spacing and alignment
                 Box(contentAlignment = Alignment.Center) {
-                    // 2. Pass Modifier.size() to the icon lambda
                     icon(Modifier.size(32.dp))
                 }
 
@@ -99,7 +96,7 @@ fun CustomAlertDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     if (confirmButtonText != null) {
-                        Button(onClick = onConfirmation ?: {}, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                        Button(onClick = onConfirmation ?: {}) {
                             Text(confirmButtonText)
                         }
                     }

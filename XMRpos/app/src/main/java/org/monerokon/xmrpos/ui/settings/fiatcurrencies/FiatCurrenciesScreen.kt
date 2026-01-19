@@ -182,10 +182,7 @@ fun ReferenceCurrencySelector(fiatOptions: List<String>, addReferenceFiatCurrenc
 
     Column {
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {expanded = !expanded}, modifier = modifier) {
-            FilledTonalButton(
-                colors = ButtonDefaults.filledTonalButtonColors().copy(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                ),
+            Button(
                 modifier = Modifier
                     .menuAnchor(
                         type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,

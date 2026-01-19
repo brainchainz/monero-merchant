@@ -124,9 +124,6 @@ fun BackendScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Button(
                     onClick = {logout()},
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                    ),
                 ) {
                     Text("Log out", style = MaterialTheme.typography.labelSmall)
                 }
@@ -140,7 +137,7 @@ fun BackendScreen(
                 dialogText = if (healthStatus is DataResult.Failure) healthStatus.message else null,
                 dialogContent = { if (healthStatus is DataResult.Success) HealthView(healthStatus) else null },
                 confirmButtonText = "Ok",
-                icon = {modifier -> Icon(painter = painterResource(R.drawable.info_24px), tint = MaterialTheme.colorScheme.secondary, contentDescription = "info", modifier = modifier)}
+                icon = {modifier -> Icon(painter = painterResource(R.drawable.info_24px), tint = MaterialTheme.colorScheme.primary, contentDescription = "info", modifier = modifier)}
             )
         }
     }

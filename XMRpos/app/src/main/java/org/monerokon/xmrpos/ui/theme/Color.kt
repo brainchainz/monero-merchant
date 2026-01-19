@@ -2,12 +2,12 @@ package org.monerokon.xmrpos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val primaryDark = Color(0xFF181623)
+val primaryDark = Color(0xFFF26722)
 val onPrimaryDark = Color(0xFFFFFFFF)
 val primaryContainerDark = Color(0xFF0E0B1D)
 val onPrimaryContainerDark = Color(0xFF0E0B1D)
-val secondaryDark = Color(0xFFF26722)
-val onSecondaryDark = Color(0xFFFF0000)
+val secondaryDark = Color(0xFF181623)
+val onSecondaryDark = Color(0xFFFFFFFF)
 val secondaryContainerDark = Color(0xFF2A2738)
 val onSecondaryContainerDark = Color(0xFFFFFFFF)
 val tertiaryDark = Color(0xFFFF0000)

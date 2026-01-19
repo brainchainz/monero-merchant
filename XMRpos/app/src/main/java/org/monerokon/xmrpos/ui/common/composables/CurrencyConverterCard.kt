@@ -79,7 +79,7 @@ fun CurrencyConverterCard(
 
                     if (xmrAmount != null) {
                         val fiatAmount = xmrAmount.multiply(rate).setScale(3, RoundingMode.HALF_UP)
-                        Text(text = "${fiatAmount.toPlainString()} $currency", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
+                        Text(text = "${fiatAmount.toPlainString()} $currency", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         Text(text = "${xmrAmount.setScale(5, RoundingMode.HALF_UP).toPlainString()} XMR", style = MaterialTheme.typography.labelSmall)
                     } else {
                         CircularProgressIndicator(

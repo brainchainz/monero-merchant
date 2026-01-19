@@ -178,7 +178,7 @@ fun PrinterSettingsScreen(
                         Column {
                             Spacer(modifier = Modifier.height(10.dp))
                             // TODO: REMOVE THIS WHEN FEATURE IS TESTED
-                            Text("Untested feature", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, textAlign = TextAlign.Left, modifier = Modifier.fillMaxWidth())
+                            Text("Untested feature", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Left, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(16.dp))
                             InputTile.Base(
                                 contentLeft = {InputTile.TextInput(
@@ -201,7 +201,7 @@ fun PrinterSettingsScreen(
                         Column {
                             Spacer(modifier = Modifier.height(16.dp))
                             // TODO: REMOVE THIS WHEN FEATURE IS TESTED
-                            Text("Untested feature", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, textAlign = TextAlign.Left, modifier = Modifier.fillMaxWidth())
+                            Text("Untested feature", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Left, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(8.dp))
                             if (attachedUsbDevices.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -287,12 +287,9 @@ fun PrinterSettingsScreen(
                 )
             }
             Spacer(modifier = Modifier.height(32.dp))
-            FilledTonalButton (
+            Button (
                 onClick = { printTest() },
                 enabled = !printingInProgress,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                ),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
                 Text("Print test", style = MaterialTheme.typography.labelSmall)
