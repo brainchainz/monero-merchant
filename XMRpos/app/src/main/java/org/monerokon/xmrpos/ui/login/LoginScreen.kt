@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import org.monerokon.xmrpos.ui.common.composables.CustomAlertDialog
 import org.monerokon.xmrpos.R
+import org.monerokon.xmrpos.ui.common.composables.CustomOutlinedTextField
 
 // LoginScreenRoot
 @Composable
@@ -55,21 +56,26 @@ fun LoginScreen(
     loginPressed: () -> Unit
 
 ) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Scaffold(modifier = Modifier.fillMaxSize().imePadding()) { innerPadding ->
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(innerPadding).fillMaxHeight().fillMaxWidth().verticalScroll(rememberScrollState())
+            modifier = Modifier.padding(innerPadding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 80.dp)
         ) {
             Text("Login to POS account", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(48.dp))
-            TextField(value = instanceUrl, placeholder = { Text("Instance url") }, onValueChange = {updateInstanceUrl(it)})
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = vendorID, placeholder = { Text("Vendor id") }, onValueChange = {updateVendorID(it)}, keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = username, placeholder = { Text("Username") }, onValueChange = {updateUsername(it)})
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = password, placeholder = { Text("Password") }, onValueChange = {updatePassword(it)}, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password))
+            CustomOutlinedTextField(
+                value = instanceUrl, label = "Instance url", onValueChange = {updateInstanceUrl(it)}
+            )
+            CustomOutlinedTextField(
+                value = vendorID, label = "Vendor id", onValueChange = {updateVendorID(it)}, keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+            )
+            CustomOutlinedTextField(
+                value = username, label = "Username", onValueChange = {updateUsername(it)}
+            )
+            CustomOutlinedTextField(
+                value = password, label = "Password", onValueChange = {updatePassword(it)}, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password)
+            )
             Spacer(modifier = Modifier.height(16.dp))
             FilledTonalButton(
                 onClick = {loginPressed()},

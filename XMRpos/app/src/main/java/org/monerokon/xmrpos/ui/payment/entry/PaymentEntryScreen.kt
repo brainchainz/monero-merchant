@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import org.monerokon.xmrpos.R
 import org.monerokon.xmrpos.ui.common.composables.CustomAlertDialog
+import org.monerokon.xmrpos.ui.common.composables.CustomOutlinedTextField
 import java.math.RoundingMode
 
 // PaymentEntryScreenRoot
@@ -168,47 +169,31 @@ fun OpenSettingsDialog(
     pinCode: String
 ) {
     var currentPinCode by remember { mutableStateOf("") }
-    AlertDialog(
-        icon = {
-            Icon(painter = painterResource(R.drawable.lock_24px), tint = MaterialTheme.colorScheme.primary, contentDescription = "Locked")
-        },
-        title = {
-            Text(text = "Settings locked")
-        },
-        text = {
-            Column {
-                TextField(
-                    value = currentPinCode,
-                    onValueChange = {currentPinCode = it},
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    label = { Text("Enter your PIN") }
-                )
-            }
-        },
+    CustomAlertDialog(
         onDismissRequest = {
             onDismissRequest()
         },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (currentPinCode == pinCode) {
-                        onConfirmation()
-                    }
-                }
-            ) {
-                Text("Unlock")
+        onConfirmation = {
+            if (currentPinCode == pinCode) {
+                onConfirmation()
             }
         },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDismissRequest()
-                }
-            ) {
-                Text("Go back")
-            }
-        }
+        dialogTitle = "Settings locked",
+        dialogContent = {
+            CustomOutlinedTextField(
+                value = currentPinCode,
+                onValueChange = {currentPinCode = it},
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                label = "Enter your PIN",
+                useDarkTheme = false
+            )
+        },
+        confirmButtonText = "Unlock",
+        dismissButtonText = "Go back",
+        icon = {
+            Icon(painter = painterResource(R.drawable.lock_24px), tint = MaterialTheme.colorScheme.primary, contentDescription = "Locked")
+        },
     )
 }
 
