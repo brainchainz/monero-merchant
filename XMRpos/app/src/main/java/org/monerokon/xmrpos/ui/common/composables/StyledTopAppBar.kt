@@ -3,6 +3,7 @@ package org.monerokon.xmrpos.ui.common.composables
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,8 +31,8 @@ fun StyledTopAppBar(
         ),
         navigationIcon = {
             IconButton(
-                onClick = { onBackClick() },
-                modifier = Modifier.padding(horizontal = (8).dp)
+                onClick = onBackClick,
+                modifier = Modifier.padding(horizontal = 8.dp)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.arrow_back_24px),
@@ -39,15 +40,13 @@ fun StyledTopAppBar(
                 )
             }
         },
-
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text, style = MaterialTheme.typography.labelSmall)
-            }
+            Text(
+                text,
+                style = MaterialTheme.typography.labelSmall,
+                // Visually overlap IconButton padding
+                modifier = Modifier.offset(x = (-16).dp)
+            )
         }
     )
 }
