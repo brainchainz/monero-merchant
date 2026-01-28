@@ -50,6 +50,7 @@ fun BalanceScreen(
                 .padding(horizontal = 24.dp)
                 .fillMaxWidth()
         ) {
+            Spacer(modifier = Modifier.height(20.dp))
             Text("Balance", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(16.dp))
             when (vendorBalance) {

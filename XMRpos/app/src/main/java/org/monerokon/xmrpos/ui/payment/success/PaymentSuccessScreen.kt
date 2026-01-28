@@ -73,11 +73,11 @@ fun PaymentSuccessScreen(
                 Button(
                     onClick = {navigateToEntry()},
                 ) {
-                    Text("New Order")
+                    Text("New Order", style = MaterialTheme.typography.labelSmall)
                 }
                 if (showPrintReceipt) {
                     Row {
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         FilledTonalButton(
                             onClick = {printReceipt(PaymentSuccess(
                                 fiatAmount = fiatAmount,
@@ -89,7 +89,7 @@ fun PaymentSuccessScreen(
                                 showPrintReceipt = showPrintReceipt
                             ))}
                         ) {
-                            Text("Print Receipt")
+                            Text("Print Receipt", style = MaterialTheme.typography.labelSmall)
                             AnimatedVisibility(
                                 visible = printingInProgress,
                                 enter = fadeIn() + slideInHorizontally(initialOffsetX = { -it })

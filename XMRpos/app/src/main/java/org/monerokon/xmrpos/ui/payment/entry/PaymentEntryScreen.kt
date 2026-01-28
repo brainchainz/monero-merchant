@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -330,13 +331,16 @@ fun PaymentEntryButton(
     val coroutineScope = rememberCoroutineScope()
     val shadowColor = MaterialTheme.colorScheme.primary
 
+    val density = LocalDensity.current
+    val radiusPx = with(density) { 12.dp.toPx() }
+
     Surface(
         modifier = modifier
             .height(64.dp)
             .dropShadow(
                 shape = MaterialTheme.shapes.extraSmall,
                 block = {
-                    radius = 40.dp.value
+                    radius =  radiusPx
                     color = shadowColor.copy(alpha = shadowAlpha.value)
                 }
             )
