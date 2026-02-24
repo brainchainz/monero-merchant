@@ -146,7 +146,7 @@ fun ReferenceCurrenciesCard(
                 CurrencyConverterCard(
                     referenceFiatCurrencies[index],
                     exchangeRates?.get(referenceFiatCurrencies[index]),
-                    estimatedValue.setScale(3, RoundingMode.HALF_UP).toPlainString(),
+                    estimatedValue.setScale(2, RoundingMode.HALF_UP).toPlainString(),
                     targetXMRvalue = targetXMRvalue
                 )
                 if (index < referenceFiatCurrencies.size - 1) {

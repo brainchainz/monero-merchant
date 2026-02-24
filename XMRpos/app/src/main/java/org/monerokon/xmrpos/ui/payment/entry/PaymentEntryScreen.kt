@@ -107,7 +107,7 @@ fun PaymentEntryScreen(
                         currency = primaryFiatCurrency,
                         exchangeRate = exchangeRate,
                         paymentValue = paymentValue.toBigDecimal().setScale(
-                            maxOf(3, paymentValue.toBigDecimal().scale()),
+                            maxOf(2, paymentValue.toBigDecimal().scale()),
                             RoundingMode. HALF_UP
                         ).toPlainString(),
                         emphasize = true,

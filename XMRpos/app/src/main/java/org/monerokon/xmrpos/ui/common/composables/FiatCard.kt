@@ -45,7 +45,7 @@ fun FiatCard(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
-                    text = BigDecimal.valueOf(fiatValue.toDouble()).setScale(maxOf(3, fiatValue.toBigDecimal().scale()),
+                    text = BigDecimal.valueOf(fiatValue.toDouble()).setScale(maxOf(2, fiatValue.toBigDecimal().scale()),
                         RoundingMode.HALF_UP).toPlainString(),
                     style = MaterialTheme.typography.displayLarge,
                     lineHeight = 32.sp,
