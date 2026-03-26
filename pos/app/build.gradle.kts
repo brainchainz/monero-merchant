@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "org.monerokon.xmrpos"
+    namespace = "com.moneromerchant.pos"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "org.monerokon.xmrpos"
+        applicationId = "com.moneromerchant.pos"
         minSdk = 31
         targetSdk = 34
         versionCode = 4

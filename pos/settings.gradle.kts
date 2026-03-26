@@ -21,5 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "XMRpos"
+rootProject.name = "MoneroMerchant"
 include(":app")
