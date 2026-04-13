@@ -1,0 +1,110 @@
+package com.moneromerchant.pos.ui.settings.backend
+
+import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavHostController
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import com.moneromerchant.pos.data.repository.AuthRepository
+import com.moneromerchant.pos.data.repository.DataStoreRepository
+import com.moneromerchant.pos.data.repository.BackendRepository
+import com.moneromerchant.pos.shared.DataResult
+import com.moneromerchant.pos.ui.Settings
+import com.moneromerchant.pos.data.remote.backend.model.BackendHealthResponse
+import javax.inject.Inject
+
+@HiltViewModel
+class BackendViewModel @Inject constructor(
+    private val dataStoreRepository: DataStoreRepository,
+    private val backendRepository: BackendRepository,
+    private val authRepository: AuthRepository
+) : ViewModel() {
+
+    private val logTag = "BackendViewModel"
+
+    private var navController: NavHostController? = null
+
+    fun setNavController(navController: NavHostController) {
+        this.navController = navController
+    }
+
+    fun navigateToMainSettings() {
+        navController?.popBackStack()
+    }
+
+    val confOptions = listOf("0-conf", "1-conf", "10-conf")
+
+    var instanceUrl: String by mutableStateOf("")
+
+    var requestInterval: String by mutableStateOf("1")
+
+    var conf: String by mutableStateOf("")
+
+    var healthStatus: DataResult<BackendHealthResponse>? by mutableStateOf(null)
+
+    init {
+        viewModelScope.launch {
+            dataStoreRepository.getBackendInstanceUrl().collect { storedInstanceUrl ->
+                Log.i(logTag, "storedInstanceUrl: $storedInstanceUrl")
+                instanceUrl = storedInstanceUrl
+            }
+        }
+        viewModelScope.launch {
+            dataStoreRepository.getBackendConfValue().collect { storedConfValue ->
+                Log.i(logTag, "storedConfValue: $storedConfValue")
+                conf = storedConfValue
+            }
+        }
+        viewModelScope.launch {
+            dataStoreRepository.getBackendRequestInterval().collect { storedRequestInterval ->
+                Log.i(logTag, "storedRequestInterval: $storedRequestInterval")
+                requestInterval = storedRequestInterval.toString()
+            }
+        }
+    }
+
+    fun updateRequestInterval(newRequestInterval: String) {
+        if (newRequestInterval.isEmpty()) {
+            requestInterval = ""
+            viewModelScope.launch {
+                dataStoreRepository.saveBackendRequestInterval(1)
+            }
+            return
+        }
+        if (newRequestInterval.all { it.isDigit() }) {
+            requestInterval = newRequestInterval
+            viewModelScope.launch {
+                dataStoreRepository.saveBackendRequestInterval(newRequestInterval.toInt())
+            }
+        }
+    }
+
+    fun updateConf(newConf: String) {
+        conf = newConf
+        viewModelScope.launch {
+            dataStoreRepository.saveBackendConfValue(newConf)
+        }
+    }
+
+    fun fetchBackendHealth() {
+        viewModelScope.launch {
+            val response = backendRepository.health()
+            Log.i(logTag, "Backend health: $response")
+            healthStatus = response
+        }
+    }
+
+    fun resetHealthStatus() {
+        healthStatus = null
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
+}
