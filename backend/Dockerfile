@@ -8,6 +8,5 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o backend ./cmd/api
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/backend .
-COPY .env .env
 EXPOSE 8080
 CMD ["./backend"]
