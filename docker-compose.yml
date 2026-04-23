@@ -1,0 +1,138 @@
+services:
+  # ------------------------
+  # MoneroPay wallet dir permissions
+  # ------------------------
+  change-vol-ownership:
+    image: alpine
+    command: "chown -R 1000: /mnt/wallet"
+    volumes:
+      - ./moneropay/data/wallet:/mnt/wallet
+
+  # ------------------------
+  # MoneroPay wallet RPC
+  # ------------------------
+  monero-wallet-rpc:
+    build:
+      context: ./simple-monero-wallet-rpc-docker
+    command: >-
+      --wallet-dir wallet
+      --disable-rpc-login
+      --rpc-bind-port=28081
+      --daemon-host=${MONERO_DAEMON_RPC_HOSTNAME}
+      --daemon-port=${MONERO_DAEMON_RPC_PORT}
+    volumes:
+      - ./moneropay/data/wallet:/home/monero/wallet
+    depends_on:
+      change-vol-ownership:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail localhost:28081/json_rpc -d '{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_version\"}'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ------------------------
+  # MoneroPay database
+  # ------------------------
+  moneropay-postgresql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${MONEROPAY_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${MONEROPAY_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${MONEROPAY_POSTGRES_DATABASE}
+    volumes:
+      - ./moneropay/data/postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MONEROPAY_POSTGRES_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ------------------------
+  # MoneroPay
+  # ------------------------
+  moneropay:
+    image: registry.gitlab.com/moneropay/moneropay:v2
+    environment:
+      RPC_ADDRESS: http://monero-wallet-rpc:28081/json_rpc
+      POSTGRESQL: postgresql://${MONEROPAY_POSTGRES_USERNAME}:${MONEROPAY_POSTGRES_PASSWORD}@moneropay-postgresql:5432/${MONEROPAY_POSTGRES_DATABASE}?sslmode=disable
+      ZERO_CONF: "true"
+    depends_on:
+      monero-wallet-rpc:
+        condition: service_healthy
+      moneropay-postgresql:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONEROPAY_PORT}:5000"
+
+  # ------------------------
+  # Backend database
+  # ------------------------
+  backend-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${BACKEND_DB_PORT}:5432"
+    volumes:
+      - backend_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ------------------------
+  # Backend API
+  # ------------------------
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      backend-db:
+        condition: service_healthy
+      moneropay:
+        condition: service_started
+    environment:
+      ADMIN_NAME: ${ADMIN_NAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PORT: ${BACKEND_PORT}
+
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_MONEROPAY_SECRET: ${JWT_MONEROPAY_SECRET}
+      JWT_LWS_TOKEN: ${JWT_LWS_TOKEN}
+
+      MONEROPAY_BASE_URL: ${MONEROPAY_BASE_URL}
+      MONEROPAY_CALLBACK_URL: ${MONEROPAY_CALLBACK_URL}
+
+      MONERO_DAEMON_RPC_ENDPOINT: ${MONERO_DAEMON_RPC_ENDPOINT}
+      MONERO_WALLET_RPC_ENDPOINT: ${MONERO_WALLET_RPC_ENDPOINT}
+      MONERO_WALLET_RPC_USERNAME: ${MONERO_WALLET_RPC_USERNAME}
+      MONERO_WALLET_RPC_PASSWORD: ${MONERO_WALLET_RPC_PASSWORD}
+
+      WALLET_NAME: ${WALLET_NAME}
+      WALLET_PASSWORD: ${WALLET_PASSWORD}
+      WALLET_AUTO_REFRESH_PERIOD: ${WALLET_AUTO_REFRESH_PERIOD}
+    volumes:
+      - ./.env:/app/.env:ro
+    ports:
+      - "${BACKEND_PORT}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  backend_db:

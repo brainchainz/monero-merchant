@@ -31,35 +31,6 @@
 
 ---
 
-## Backend Setup
-
-### Prerequisites
-- Clean **Ubuntu LTS VPS**
-- Sudo privileges
-
-### Installation
-```bash
-wget https://raw.githubusercontent.com/Monero-Merchant/monero-merchant/refs/heads/main/install.sh -O install.sh
-chmod +x install.sh
-sudo ./install.sh
-````
-
-This installs **MoneroPay** and **backend** using Docker.
-It automatically configures environment variables, secrets, health checks, and wallet setup.
-
-### Uninstall / Cleanup
-
-```bash
-sudo ./install.sh clean
-```
-
-Removes all containers, cloned repositories, and `~/wallets`.
-**Always back up your wallets** before cleaning.
-
-> For detailed backend API usage, see [`backend/README.md`](backend/README.md).
-
----
-
 ## Taking Payments
 
 1. Enter the amount in your `primaryFiatCurrency` and tap the **green button**.
@@ -184,6 +155,51 @@ docker run --rm \
 ```
 
 Output APK: `app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
+## Backend Setup
+
+### Prerequisites
+- Clean Ubuntu LTS VPS
+- Docker (user added to docker group)
+- Docker Compose
+- Git
+- OpenSSL
+
+### Install
+
+`git clone https://github.com/Monero-Merchant/monero-merchant`
+
+`cd monero-merchant`
+
+`make install`
+
+### Start / Restart / Rebuild / Stop
+
+`make up` # start services
+
+`make restart` # restart containers (after .env changes)
+
+`make rebuild` # rebuild images and restart
+
+`make down` # stop containers
+
+### Status & Logs
+
+`make ps` # show running containers
+
+`make logs` # stream logs
+
+### Cleanup / Uninstall (Warning: this will delete database and wallet data)
+
+`make clean` # remove containers, volumes, and build cache
+
+`make reset` # full reset: clean + delete .env and local dependencies
+
+---
+
+> For detailed backend API usage, see [`backend/README.md`](backend/README.md).
 
 ---
 
