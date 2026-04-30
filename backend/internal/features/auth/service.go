@@ -51,25 +51,25 @@ func (s *AuthService) AuthenticateAdmin(ctx context.Context, name string, passwo
 	return accessToken, refreshToken, nil
 }
 
-func (s *AuthService) AuthenticateVendor(ctx context.Context, name string, password string) (accessToken string, refreshToken string, err error) {
+func (s *AuthService) AuthenticateVendor(ctx context.Context, name string, password string) (accessToken string, refreshToken string, vendorID uint, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	vendor, err := s.repo.FindVendorByName(ctx, name)
 	if err != nil {
-		return "", "", errors.New("invalid credentials")
+		return "", "", 0, errors.New("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(vendor.PasswordHash), []byte(password)); err != nil {
-		return "", "", errors.New("invalid credentials")
+		return "", "", 0, errors.New("invalid credentials")
 	}
 
 	accessToken, refreshToken, err = s.generateVendorToken(vendor.ID, vendor.PasswordVersion)
 	if err != nil {
-		return "", "", errors.New("failed to generate tokens")
+		return "", "", 0, errors.New("failed to generate tokens")
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, vendor.ID, nil
 }
 
 func (s *AuthService) AuthenticatePos(ctx context.Context, vendorID uint, name string, password string) (accessToken string, refreshToken string, err error) {

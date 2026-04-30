@@ -33,6 +33,7 @@ type loginPosRequest struct {
 type loginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	VendorID     uint   `json:"vendor_id,omitempty"`
 }
 
 func (h *AuthHandler) LoginAdmin(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +80,7 @@ func (h *AuthHandler) LoginVendor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.service.AuthenticateVendor(ctx, req.Name, req.Password)
+	accessToken, refreshToken, vendorID, err := h.service.AuthenticateVendor(ctx, req.Name, req.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -88,6 +89,7 @@ func (h *AuthHandler) LoginVendor(w http.ResponseWriter, r *http.Request) {
 	resp := loginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		VendorID:     vendorID,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

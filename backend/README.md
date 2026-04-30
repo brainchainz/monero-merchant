@@ -11,6 +11,7 @@ A backend service for managing Monero Merchant operations. It provides APIs for 
 - Admin invite system
 - Health check endpoints
 - Transfer completion and withdrawal management
+- **Vendor Dashboard** - Web-based interface for vendors to manage their account
 
 ## Getting Started
 
@@ -91,6 +92,33 @@ docker compose restart backend
 # rebuild API only
 docker compose up -d --build backend
 ```
+
+## Vendor Dashboard
+
+A web-based dashboard is available for vendors to manage their account without needing API tools like Postman or curl.
+
+### Accessing the Dashboard
+
+Navigate to `/vendor-dashboard.html` on your backend server (e.g., `https://your-server.com/vendor-dashboard.html`).
+
+### Dashboard Features
+
+- **Account Overview** - View your current balance and transaction statistics
+- **Transaction History** - Browse all transactions with filtering by status:
+  - Pending (awaiting payment)
+  - Confirmed (payment received)
+  - Transferred (paid out to your wallet)
+- **CSV Export** - Export transaction history in Koinly-compatible format for tax reporting
+- **POS Device Management** - Create and manage multiple POS devices
+- **Withdrawals** - Initiate transfers of your balance to your Monero payout address
+- **Account Settings** - Update password and manage your account
+
+### Technical Details
+
+- Single HTML file with no external dependencies
+- Works in any modern browser
+- JWT-based authentication with automatic token refresh
+- XSS protection built-in
 
 ## How to use it
 
