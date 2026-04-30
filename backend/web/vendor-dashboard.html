@@ -577,17 +577,30 @@ async function refreshAccessToken() {
 }
 
 // ============ Auth ============
+// access token is kept in memory only, refresh token is persisted so the
+// user stays logged in across reloads (it gets exchanged for a new access
+// token on page load).
 function saveAuth() {
-  localStorage.setItem('xmrpos_auth', JSON.stringify(auth));
+  localStorage.setItem('xmrpos_auth', JSON.stringify({
+    refreshToken: auth.refreshToken,
+    vendorName: auth.vendorName,
+    vendorId: auth.vendorId
+  }));
 }
 
 function loadAuth() {
   const saved = localStorage.getItem('xmrpos_auth');
-  if (saved) {
-    auth = JSON.parse(saved);
-    return auth.accessToken !== null;
+  if (!saved) return false;
+  try {
+    const data = JSON.parse(saved);
+    auth.refreshToken = data.refreshToken || null;
+    auth.vendorName = data.vendorName || null;
+    auth.vendorId = data.vendorId != null ? data.vendorId : null;
+    return auth.refreshToken !== null;
+  } catch (e) {
+    localStorage.removeItem('xmrpos_auth');
+    return false;
   }
-  return false;
 }
 
 function logout() {
@@ -1281,8 +1294,8 @@ function closeModal(id) {
 }
 
 // ============ Event Listeners ============
-document.addEventListener('DOMContentLoaded', () => {
-  if (loadAuth()) {
+document.addEventListener('DOMContentLoaded', async () => {
+  if (loadAuth() && await refreshAccessToken()) {
     showAppScreen();
   } else {
     showLoginScreen();
