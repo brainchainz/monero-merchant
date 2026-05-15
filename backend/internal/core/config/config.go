@@ -48,8 +48,13 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("error loading .env file: %w", err)
+	// Optional .env file — don't fail if absent (Umbrel passes env vars directly)
+	_ = godotenv.Load()
+
+	// If SECRETS_FILE is set, generate and source secrets before building config
+	if secretsFile := os.Getenv("SECRETS_FILE"); secretsFile != "" {
+		_ = EnsureSecretsFile(secretsFile)
+		_ = LoadSecretsFile(secretsFile)
 	}
 
 	config := &Config{

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monero Merchant Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1b26;--card:#24283b;--border:#414868;--text:#a9b1d6;
+  --heading:#c0caf5;--accent:#7aa2f7;--accent2:#bb9af7;--ok:#9ece6a;
+  --warn:#e0af68;--err:#f7768e;--muted:#565f89;
+}
+html,body{height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:6px;padding:8px 14px;font-size:14px;font-weight:600;transition:opacity .2s}
+button:hover{opacity:.85}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select,textarea{font-family:inherit;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--bg);color:var(--heading);font-size:14px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+pre,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
+pre{background:#16161e;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;max-height:300px}
+
+/* Layout */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar header{padding:20px;border-bottom:1px solid var(--border);font-weight:700;color:var(--heading);font-size:18px}
+.sidebar nav{flex:1;padding:12px}
+.sidebar nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;color:var(--text);font-size:14px;margin-bottom:2px;transition:background .15s}
+.sidebar nav a:hover{background:rgba(122,162,247,.1);color:var(--heading)}
+.sidebar nav a.active{background:rgba(122,162,247,.18);color:var(--accent)}
+.sidebar footer{padding:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.sidebar .icon{width:18px;height:18px;opacity:.8}
+.main{flex:1;padding:28px 32px;overflow:auto}
+.main h1{color:var(--heading);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card h2{color:var(--heading);font-size:15px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:700px){.sidebar{display:none}.main{padding:16px}}
+
+/* Status cards */
+.status-card{padding:18px;display:flex;flex-direction:column;gap:8px}
+.status-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.status-card .value{font-size:24px;font-weight:700;color:var(--heading)}
+.status-card .sub{font-size:13px;color:var(--text)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.err{background:var(--err)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:left}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+td{border-bottom:1px solid rgba(65,72,104,.4)}
+tr:last-child td{border-bottom:none}
+.btn-sm{padding:4px 10px;font-size:12px;border-radius:4px}
+.btn-primary{background:var(--accent);color:#1a1b26}
+.btn-danger{background:var(--err);color:#fff}
+.btn-muted{background:var(--border);color:var(--heading)}
+
+/* Forms */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:700px){.form-row{grid-template-columns:1fr}}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+
+/* Toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:slideIn .3s ease;max-width:320px;font-size:13px}
+.toast.ok{border-left:3px solid var(--ok)}.toast.err{border-left:3px solid var(--err)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9998}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h3{color:var(--heading);margin-bottom:14px}
+.modal .actions{margin-top:18px;justify-content:flex-end}
+
+/* Misc */
+.empty{color:var(--muted);font-size:14px;padding:20px 0;text-align:center}
+.copy-wrap{display:flex;align-items:center;gap:8px}
+.copy-wrap input{flex:1;font-family:monospace;font-size:12px}
+.masked{-webkit-text-security:disc}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <header>Monero Merchant</header>
+    <nav>
+      <a href="#status" data-page="status" class="active"><span class="icon">&#9679;</span> Status</a>
+      <a href="#credentials" data-page="credentials"><span class="icon">&#128274;</span> Credentials</a>
+      <a href="#vendors" data-page="vendors"><span class="icon">&#128101;</span> Vendors</a>
+      <a href="#invites" data-page="invites"><span class="icon">&#128221;</span> Invites</a>
+      <a href="#transfers" data-page="transfers"><span class="icon">&#128178;</span> Transfers</a>
+      <a href="#settings" data-page="settings"><span class="icon">&#9881;</span> Settings</a>
+    </nav>
+    <footer>Admin Dashboard<br><span id="backend-version">v2.0</span></footer>
+  </aside>
+
+  <main class="main" id="main">
+    <!-- Content injected by JS -->
+  </main>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<!-- Login overlay -->
+<div class="modal-overlay open" id="login-modal">
+  <div class="modal">
+    <h3>Admin Login</h3>
+    <div class="form-row" style="grid-template-columns:1fr">
+      <div>
+        <label>Username</label>
+        <input id="login-user" value="admin" readonly>
+      </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr">
+      <div>
+        <label>Password</label>
+        <input id="login-pass" type="password" placeholder="Enter admin password">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="btn-login">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-msg" style="color:var(--text);font-size:14px"></p>
+    <div class="actions">
+      <button class="btn-muted" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="btn-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* === STATE === */
+let token = localStorage.getItem('mm_token') || '';
+let refresh = localStorage.getItem('mm_refresh') || '';
+let currentPage = 'status';
+let apiBase = '';
+
+/* === UTILS === */
+const $ = id => document.getElementById(id);
+const qs = s => document.querySelector(s);
+const qsa = s => document.querySelectorAll(s);
+
+function showToast(msg, type='ok') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  $('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function fmtDate(ts) {
+  if (!ts) return '-';
+  return new Date(ts * 1000).toLocaleString();
+}
+
+function fmtXMR(atomic) {
+  if (!atomic && atomic !== 0) return '-';
+  return (atomic / 1e12).toFixed(6) + ' XMR';
+}
+
+async function api(path, opts={}) {
+  const url = apiBase + path;
+  const headers = {'Content-Type':'application/json'};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  try {
+    const res = await fetch(url, {...opts, headers:{...headers, ...opts.headers}});
+    if (res.status === 401 && refresh) {
+      const r2 = await fetch(apiBase + '/auth/refresh', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({refresh_token:refresh})
+      });
+      if (r2.ok) {
+        const d2 = await r2.json();
+        token = d2.access_token || '';
+        refresh = d2.refresh_token || '';
+        localStorage.setItem('mm_token', token);
+        localStorage.setItem('mm_refresh', refresh);
+        return api(path, opts);
+      }
+    }
+    return res;
+  } catch(e) {
+    throw e;
+  }
+}
+
+function copy(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(()=>showToast('Copied!'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied!');
+  }
+}
+
+/* === LOGIN === */
+$('btn-login').onclick = async () => {
+  const pass = $('login-pass').value.trim();
+  if (!pass) return showToast('Enter password', 'err');
+  try {
+    const res = await fetch(apiBase + '/auth/login-admin', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:'admin', password:pass})
+    });
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok) {
+      showToast(data.message || 'Login failed', 'err');
+      return;
+    }
+    token = data.access_token || '';
+    refresh = data.refresh_token || '';
+    localStorage.setItem('mm_token', token);
+    localStorage.setItem('mm_refresh', refresh);
+    $('login-modal').classList.remove('open');
+    showToast('Logged in');
+    renderPage(currentPage);
+  } catch(e) {
+    showToast('Network error', 'err');
+  }
+};
+
+/* === ROUTING === */
+function navigate(page) {
+  currentPage = page;
+  qsa('.sidebar nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
+  renderPage(page);
+}
+
+qsa('.sidebar nav a').forEach(a => {
+  a.onclick = e => {
+    e.preventDefault();
+    navigate(a.dataset.page);
+  };
+});
+
+window.addEventListener('hashchange', () => {
+  const h = location.hash.replace('#','') || 'status';
+  navigate(h);
+});
+
+/* === PAGES === */
+const pages = {
+  status: renderStatus,
+  credentials: renderCredentials,
+  vendors: renderVendors,
+  invites: renderInvites,
+  transfers: renderTransfers,
+  settings: renderSettings
+};
+
+function renderPage(page) {
+  const fn = pages[page] || pages.status;
+  $('main').innerHTML = '';
+  fn();
+}
+
+/* --- Status --- */
+function renderStatus() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--accent)">&#9679;</span> System Status</h1>
+    <div class="grid3">
+      <div class="card status-card">
+        <div class="label">Monero Node</div>
+        <div class="value" id="node-status"><span class="spin"></span></div>
+        <div class="sub" id="node-details">Checking...</div>
+      </div>
+      <div class="card status-card">
+        <div class="label">Backend</div>
+        <div class="value" id="be-status"><span class="dot ok"></span>Online</div>
+        <div class="sub" id="be-details">API reachable</div>
+      </div>
+      <div class="card status-card">
+        <div class="label">MoneroPay</div>
+        <div class="value" id="mp-status"><span class="spin"></span></div>
+        <div class="sub" id="mp-details">Checking...</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Wallet Balance</h2>
+      <div id="wallet-balance"><span class="spin"></span></div>
+    </div>
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <div class="actions">
+        <button class="btn-primary" onclick="navigate('invites')">Create Invite</button>
+        <button class="btn-primary" onclick="navigate('vendors')">View Vendors</button>
+        <button class="btn-primary" onclick="navigate('transfers')">Transfer Balance</button>
+      </div>
+    </div>
+  `;
+  loadStatus();
+}
+
+async function loadStatus() {
+  // Node + MoneroPay via public /api/status
+  try {
+    const res = await fetch(apiBase + '/api/status');
+    const data = await res.json().catch(()=>({}));
+    const mp = data.services?.MoneroPay || {};
+    const mpOk = mp.status === 200 && mp.services?.wallet_rpc && mp.services?.postgresql;
+    $('mp-status').innerHTML = mpOk ? '<span class="dot ok"></span>Online' : '<span class="dot err"></span>Offline';
+    $('mp-details').textContent = mpOk ? 'Wallet RPC + Postgres OK' : (data.status ? 'Service unavailable' : 'Not connected');
+    $('be-status').innerHTML = '<span class="dot ok"></span>Online';
+    $('be-details').textContent = 'API responding';
+  } catch(e) {
+    $('mp-status').innerHTML = '<span class="dot err"></span>Error';
+    $('be-status').innerHTML = '<span class="dot warn"></span>Check';
+  }
+
+  // Node info (admin only)
+  try {
+    const res = await api('/admin/balance');
+    if (res.ok) {
+      const bal = await res.json();
+      $('wallet-balance').innerHTML = `
+        <div class="grid3">
+          <div><div class="label">Total</div><div class="value" style="font-size:18px">${fmtXMR(bal.total)}</div></div>
+          <div><div class="label">Unlocked</div><div class="value" style="font-size:18px">${fmtXMR(bal.unlocked)}</div></div>
+          <div><div class="label">Locked</div><div class="value" style="font-size:18px">${fmtXMR(bal.locked)}</div></div>
+        </div>`;
+      $('node-status').innerHTML = '<span class="dot ok"></span>Synced';
+      $('node-details').textContent = 'Wallet RPC connected';
+    } else {
+      $('wallet-balance').innerHTML = '<div class="empty">Login to view balance</div>';
+      $('node-status').innerHTML = '<span class="dot warn"></span>Unknown';
+      $('node-details').textContent = 'Login to check node status';
+    }
+  } catch(e) {
+    $('wallet-balance').innerHTML = '<div class="empty">Unable to fetch balance</div>';
+  }
+}
+
+/* --- Credentials --- */
+function renderCredentials() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--accent2)">&#128274;</span> Credentials</h1>
+    <div class="card">
+      <h2>Admin Access Token</h2>
+      <div class="copy-wrap">
+        <input type="text" id="cred-access" value="${token||'Login to view'}" readonly class="${token?'':'masked'}">
+        <button class="btn-muted btn-sm" onclick="copy($('cred-access').value)">Copy</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Refresh Token</h2>
+      <div class="copy-wrap">
+        <input type="text" id="cred-refresh" value="${refresh||'Login to view'}" readonly class="${refresh?'':'masked'}">
+        <button class="btn-muted btn-sm" onclick="copy($('cred-refresh').value)">Copy</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>API Base URL</h2>
+      <div class="copy-wrap">
+        <input type="text" id="cred-url" value="${location.origin + apiBase}" readonly>
+        <button class="btn-muted btn-sm" onclick="copy($('cred-url').value)">Copy</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Connection URLs</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Configure these in your Android POS client settings.</p>
+      <div class="copy-wrap" style="margin-bottom:8px">
+        <input type="text" value="${location.origin}" readonly>
+        <button class="btn-muted btn-sm" onclick="copy('${location.origin}')">Copy</button>
+      </div>
+    </div>
+  `;
+}
+
+/* --- Vendors --- */
+function renderVendors() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--accent2)">&#128101;</span> Vendors</h1>
+    <div class="card">
+      <h2>All Vendors</h2>
+      <div id="vendors-list"><span class="spin"></span></div>
+    </div>
+  `;
+  loadVendors();
+}
+
+async function loadVendors() {
+  try {
+    const res = await api('/admin/vendors');
+    if (!res.ok) { $('vendors-list').innerHTML = '<div class="empty">Login to view vendors</div>'; return; }
+    const data = await res.json();
+    const list = data.vendors || [];
+    if (!list.length) { $('vendors-list').innerHTML = '<div class="empty">No vendors yet</div>'; return; }
+    let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Subaddress</th><th>Balance</th><th>Created</th><th>Actions</th></tr></thead><tbody>`;
+    list.forEach(v => {
+      html += `<tr>
+        <td>${v.id}</td>
+        <td>${v.name||'-'}</td>
+        <td style="font-family:monospace;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${v.subaddress||'-'}</td>
+        <td>${fmtXMR(v.balance?.unlocked)}</td>
+        <td>${fmtDate(v.created_at)}</td>
+        <td>
+          <button class="btn-danger btn-sm" onclick="confirmDeleteVendor(${v.id},'${v.name||'Vendor'}')">Delete</button>
+        </td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    $('vendors-list').innerHTML = html;
+  } catch(e) {
+    $('vendors-list').innerHTML = '<div class="empty">Error loading vendors</div>';
+  }
+}
+
+let deleteVendorId = null;
+function confirmDeleteVendor(id, name) {
+  deleteVendorId = id;
+  $('confirm-title').textContent = 'Delete Vendor';
+  $('confirm-msg').textContent = `Are you sure you want to delete vendor "${name}" (ID: ${id})? This action cannot be undone.`;
+  $('confirm-modal').classList.add('open');
+  $('btn-confirm').onclick = async () => {
+    closeConfirm();
+    try {
+      const res = await api('/admin/delete', {
+        method:'POST',
+        body: JSON.stringify({vendor_id:deleteVendorId})
+      });
+      if (res.ok) { showToast('Vendor deleted'); loadVendors(); }
+      else showToast('Delete failed', 'err');
+    } catch(e) { showToast('Error', 'err'); }
+  };
+}
+function closeConfirm() {
+  $('confirm-modal').classList.remove('open');
+  deleteVendorId = null;
+}
+
+/* --- Invites --- */
+function renderInvites() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--accent2)">&#128221;</span> Invites</h1>
+    <div class="card">
+      <h2>Create Invite</h2>
+      <div class="form-row">
+        <div>
+          <label>Valid Until</label>
+          <input type="datetime-local" id="invite-until">
+        </div>
+        <div>
+          <label>Forced Vendor Name (optional)</label>
+          <input type="text" id="invite-name" placeholder="e.g. Cafe Barcelona">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-create-invite">Create Invite</button>
+      </div>
+      <pre id="invite-result" style="margin-top:14px;display:none"></pre>
+    </div>
+    <div class="card">
+      <h2>Recent Invites</h2>
+      <div id="invites-list"><div class="empty">No invites created yet</div></div>
+    </div>
+  `;
+  // Default valid until = now + 24h
+  const d = new Date(Date.now() + 86400000);
+  $('invite-until').value = d.toISOString().slice(0,16);
+  $('btn-create-invite').onclick = async () => {
+    const untilVal = $('invite-until').value;
+    const forced = $('invite-name').value.trim() || null;
+    if (!untilVal) return showToast('Select valid until date', 'err');
+    const until = Math.floor(new Date(untilVal).getTime()/1000);
+    try {
+      const res = await api('/admin/invite', {
+        method:'POST',
+        body: JSON.stringify({valid_until:until, forced_name:forced})
+      });
+      const data = await res.json();
+      $('invite-result').style.display = 'block';
+      $('invite-result').textContent = JSON.stringify(data, null, 2);
+      if (res.ok) showToast('Invite created');
+      else showToast(data.message||'Failed', 'err');
+    } catch(e) { showToast('Error', 'err'); }
+  };
+}
+
+/* --- Transfers --- */
+function renderTransfers() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--accent2)">&#128178;</span> Transfers</h1>
+    <div class="card">
+      <h2>Transfer Balance to Vendor</h2>
+      <div class="form-row" style="grid-template-columns:1fr auto">
+        <div>
+          <label>Vendor ID</label>
+          <input type="number" id="tx-vendor-id" min="1" placeholder="1">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn-primary" id="btn-transfer">Initiate Transfer</button>
+        </div>
+      </div>
+      <pre id="tx-result" style="margin-top:14px;display:none"></pre>
+    </div>
+  `;
+  $('btn-transfer').onclick = async () => {
+    const id = parseInt($('tx-vendor-id').value);
+    if (!id || id < 1) return showToast('Enter a valid vendor ID', 'err');
+    try {
+      const res = await api('/admin/transfer-balance', {
+        method:'POST',
+        body: JSON.stringify({vendor_id:id})
+      });
+      const data = await res.json();
+      $('tx-result').style.display = 'block';
+      $('tx-result').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      if (res.ok) showToast('Transfer initiated');
+      else showToast(data.message||'Transfer failed', 'err');
+    } catch(e) { showToast('Error', 'err'); }
+  };
+}
+
+/* --- Settings --- */
+function renderSettings() {
+  $('main').innerHTML = `
+    <h1><span style="color:var(--muted)">&#9881;</span> Settings</h1>
+    <div class="card">
+      <h2>Configuration</h2>
+      <p style="font-size:13px;color:var(--muted)">These values are configured via Umbrel app settings or your .env file.</p>
+      <div style="margin-top:14px">
+        <div class="form-row">
+          <div><label>Admin Name</label><input value="admin" readonly></div>
+          <div><label>Port</label><input value="8080" readonly></div>
+        </div>
+        <div class="form-row">
+          <div><label>MoneroPay Base URL</label><input id="set-mp-url" placeholder="Loading..." readonly></div>
+          <div><label>MoneroPay Callback URL</label><input id="set-cb-url" placeholder="Loading..." readonly></div>
+        </div>
+        <div class="form-row">
+          <div><label>Wallet RPC Endpoint</label><input id="set-wallet-rpc" placeholder="Loading..." readonly></div>
+          <div><label>Daemon RPC Endpoint</label><input id="set-daemon-rpc" placeholder="Loading..." readonly></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Danger Zone</h2>
+      <div class="actions">
+        <button class="btn-danger" onclick="logout()">Logout</button>
+        <button class="btn-danger" onclick="localStorage.clear(); showToast('All local data cleared'); setTimeout(()=>location.reload(),800)">Clear Local Data</button>
+      </div>
+    </div>
+  `;
+  // Try to populate from a hypothetical /api/config endpoint; for now leave as placeholders
+}
+
+function logout() {
+  token = ''; refresh = '';
+  localStorage.removeItem('mm_token');
+  localStorage.removeItem('mm_refresh');
+  $('login-modal').classList.add('open');
+  showToast('Logged out');
+}
+
+/* === INIT === */
+if (location.hash) currentPage = location.hash.replace('#','');
+if (!token) $('login-modal').classList.add('open');
+else $('login-modal').classList.remove('open');
+renderPage(currentPage);
+</script>
+</body>
+</html>

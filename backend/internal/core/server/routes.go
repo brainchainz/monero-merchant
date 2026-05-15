@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -72,6 +74,11 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 	callbackHandler := callback.NewCallbackHandler(callbackService)
 	miscHandler := misc.NewMiscHandler(miscService)
 
+	// Static dashboard files
+	r.Get("/", serveDashboard)
+	r.Get("/dashboard", serveDashboard)
+	r.Get("/dashboard/*", serveDashboard)
+
 	// Public routes
 	r.Group(func(r chi.Router) {
 		// Auth routes
@@ -90,6 +97,9 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 
 		// Miscellaneous routes
 		r.Get("/misc/health", miscHandler.GetHealth)
+
+		// Dashboard API — public status endpoint (no auth required)
+		r.Get("/api/status", miscHandler.GetHealth)
 	})
 
 	// Protected routes
@@ -125,4 +135,20 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 	})
 
 	return r
+}
+
+// serveDashboard serves the embedded admin dashboard SPA.
+// It looks for a DASHBOARD_DIR env var (Umbrel sets this to /data/dashboard)
+// and falls back to ./web/dashboard/ for local development.
+func serveDashboard(w http.ResponseWriter, r *http.Request) {
+	dir := os.Getenv("DASHBOARD_DIR")
+	if dir == "" {
+		dir = "./web/dashboard"
+	}
+	indexPath := dir + "/index.html"
+	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
+		http.Error(w, "Dashboard not found", http.StatusNotFound)
+		return
+	}
+	http.ServeFile(w, r, indexPath)
 }
