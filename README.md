@@ -199,6 +199,51 @@ Output APK: `app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
+## Umbrel Install
+
+### Prerequisites
+- [Umbrel](https://umbrel.com) OS running on a Raspberry Pi or Linux server
+- Monero daemon (`monerod`) and wallet RPC running (or accessible remotely)
+- [MoneroPay](https://github.com/MoneroPay/MoneroPay) running (or accessible remotely)
+
+### Method 1 — Community App Store (Recommended)
+
+1. Open your Umbrel dashboard → **App Store**
+2. Add community app store:
+   ```
+   https://github.com/brainchainz/umbrel-app-store
+   ```
+3. Search for **Monero Merchant** → **Install**
+4. Fill in the configuration:
+   - Admin password
+   - Monero daemon RPC endpoint
+   - Monero wallet RPC endpoint
+   - MoneroPay base URL
+5. Click **Install** — the app will auto-generate secrets and start
+6. Access the admin dashboard at the app's Umbrel URL
+
+### Method 2 — Manual Sideload
+
+```bash
+# On your Umbrel host
+mkdir -p ~/umbrel/app-data/monero-merchant
+cd ~/umbrel/app-data/monero-merchant
+
+# Download the compose and config files
+curl -o docker-compose.yml https://raw.githubusercontent.com/brainchainz/monero-merchant/main/umbrel/docker-compose.yml
+curl -o exports.sh https://raw.githubusercontent.com/brainchainz/monero-merchant/main/umbrel/exports.sh
+curl -o umbrel-app.yml https://raw.githubusercontent.com/brainchainz/monero-merchant/main/umbrel/umbrel-app.yml
+chmod +x exports.sh
+
+# Generate .env and .secrets
+APP_DATA_DIR=$(pwd) APP_ADMIN_PASSWORD=changeme bash exports.sh
+
+# Start services
+APP_DATA_DIR=$(pwd) docker compose up -d
+```
+
+Access the dashboard at `http://<your-umbrel-ip>:8080`.
+
 > For detailed backend API usage, see [`backend/README.md`](backend/README.md).
 
 ---
