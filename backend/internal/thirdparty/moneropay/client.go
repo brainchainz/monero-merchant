@@ -22,15 +22,14 @@ type MoneroPayAPIClient struct {
 
 // NewExternalAPIClient initializes an external API client with a base URL loaded from environment variables
 func NewMoneroPayAPIClient() *MoneroPayAPIClient {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// Optional .env file — don't fail if absent (Umbrel passes env vars directly)
+	_ = godotenv.Load()
 
 	// Read the base URL from environment variables
 	baseURL := os.Getenv("MONEROPAY_BASE_URL")
 	if baseURL == "" {
-		log.Fatal("MONEROPAY_BASE_URL environment variable is not set")
+		log.Println("MONEROPAY_BASE_URL not set, using default")
+		baseURL = "http://host.docker.internal:5000"
 	}
 
 	return &MoneroPayAPIClient{BaseURL: baseURL}

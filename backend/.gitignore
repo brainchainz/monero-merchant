@@ -21,3 +21,4 @@
 
 # Configuration files with sensitive information
 .env
+mm-backend-linux

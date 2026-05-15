@@ -3,8 +3,7 @@ services:
     environment:
       APP_HOST: monero-merchant_backend_1
       APP_PORT: 8080
-    image: ghcr.io/umbrel/app-proxy:1.7.0
-    user: "0:0"
+    image: getumbrel/app-proxy:1.7.0
     volumes:
       - "${APP_DATA_DIR}:/data"
 
