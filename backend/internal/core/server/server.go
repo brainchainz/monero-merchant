@@ -38,7 +38,7 @@ func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	}
 
 	if cfg.MoneroDaemonRPCEndpoint != "" {
-		s.daemonRPC = rpc.NewClient(cfg.MoneroDaemonRPCEndpoint, "", "")
+		s.daemonRPC = rpc.NewDaemonClient(cfg.MoneroDaemonRPCEndpoint, cfg.MoneroDaemonRPCUsername, cfg.MoneroDaemonRPCPassword)
 	} else {
 		s.daemonRPC = s.walletRPC
 	}

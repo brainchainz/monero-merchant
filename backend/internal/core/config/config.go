@@ -40,6 +40,8 @@ type Config struct {
 
 	// Monero Daemon RPC Configuration
 	MoneroDaemonRPCEndpoint string
+	MoneroDaemonRPCUsername string
+	MoneroDaemonRPCPassword string
 
 	// Wallet Settings
 	WalletName              string
@@ -89,6 +91,8 @@ func LoadConfig() (*Config, error) {
 
 		// Monero Daemon RPC Configuration
 		MoneroDaemonRPCEndpoint: os.Getenv("MONERO_DAEMON_RPC_ENDPOINT"),
+		MoneroDaemonRPCUsername: os.Getenv("MONERO_DAEMON_RPC_USERNAME"),
+		MoneroDaemonRPCPassword: os.Getenv("MONERO_DAEMON_RPC_PASSWORD"),
 
 		// Wallet Settings
 		WalletName:     os.Getenv("WALLET_NAME"),
