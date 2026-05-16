@@ -3,583 +3,414 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Monero Merchant Admin</title>
+<title>Monero Merchant</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root{
-  --bg:#1a1b26;--card:#24283b;--border:#414868;--text:#a9b1d6;
-  --heading:#c0caf5;--accent:#7aa2f7;--accent2:#bb9af7;--ok:#9ece6a;
-  --warn:#e0af68;--err:#f7768e;--muted:#565f89;
+  --bg:#08080a;
+  --surface:#0f0f12;
+  --surface-raised:#16161b;
+  --surface-glass:rgba(22,22,27,0.6);
+  --ink:#fafafa;
+  --ink-dim:#8a8a9e;
+  --ink-faint:#4a4a5e;
+  --accent:#ff6b35;
+  --accent-glow:rgba(255,107,53,0.3);
+  --accent2:#00d4aa;
+  --accent2-glow:rgba(0,212,170,0.25);
+  --warn:#ffc107;
+  --font-ui:'Instrument Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
 }
-html,body{height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
-a{color:var(--accent);text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;border-radius:6px;padding:8px 14px;font-size:14px;font-weight:600;transition:opacity .2s}
-button:hover{opacity:.85}
-button:disabled{opacity:.4;cursor:not-allowed}
-input,select,textarea{font-family:inherit;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--bg);color:var(--heading);font-size:14px;width:100%}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
-label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
-pre,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px}
-pre{background:#16161e;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;max-height:300px}
 
-/* Layout */
-.app{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column}
-.sidebar header{padding:20px;border-bottom:1px solid var(--border);font-weight:700;color:var(--heading);font-size:18px}
-.sidebar nav{flex:1;padding:12px}
-.sidebar nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;color:var(--text);font-size:14px;margin-bottom:2px;transition:background .15s}
-.sidebar nav a:hover{background:rgba(122,162,247,.1);color:var(--heading)}
-.sidebar nav a.active{background:rgba(122,162,247,.18);color:var(--accent)}
-.sidebar footer{padding:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
-.sidebar .icon{width:18px;height:18px;opacity:.8}
-.main{flex:1;padding:28px 32px;overflow:auto}
-.main h1{color:var(--heading);font-size:22px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
-.card h2{color:var(--heading);font-size:15px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.6px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
-@media(max-width:700px){.sidebar{display:none}.main{padding:16px}}
+html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(--ink);overflow:hidden}
 
-/* Status cards */
-.status-card{padding:18px;display:flex;flex-direction:column;gap:8px}
-.status-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.status-card .value{font-size:24px;font-weight:700;color:var(--heading)}
-.status-card .sub{font-size:13px;color:var(--text)}
-.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
-.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.err{background:var(--err)}
+/* ========== AMBIENT CANVAS ========== */
+#ambient{position:fixed;inset:0;z-index:0;pointer-events:none}
+#ambient .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.4;animation:float 20s ease-in-out infinite}
+#ambient .orb:nth-child(1){width:600px;height:600px;background:var(--accent);top:-10%;left:-5%;animation-delay:0s}
+#ambient .orb:nth-child(2){width:500px;height:500px;background:var(--accent2);bottom:-10%;right:-5%;animation-delay:-7s}
+#ambient .orb:nth-child(3){width:400px;height:400px;background:#7c3aed;top:40%;left:40%;animation-delay:-14s;opacity:0.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.1)}66%{transform:translate(-20px,30px) scale(0.95)}}
 
-/* Tables */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:10px 12px;text-align:left}
-th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
-td{border-bottom:1px solid rgba(65,72,104,.4)}
-tr:last-child td{border-bottom:none}
-.btn-sm{padding:4px 10px;font-size:12px;border-radius:4px}
-.btn-primary{background:var(--accent);color:#1a1b26}
-.btn-danger{background:var(--err);color:#fff}
-.btn-muted{background:var(--border);color:var(--heading)}
+/* Noise grain overlay */
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat}
 
-/* Forms */
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-@media(max-width:700px){.form-row{grid-template-columns:1fr}}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+/* ========== TOP NAV ========== */
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:linear-gradient(180deg,var(--bg) 0%,transparent 100%)}
+.top-nav .brand{display:flex;align-items:center;gap:10px}
+.top-nav .brand-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:#fff;font-size:12px;box-shadow:0 0 20px var(--accent-glow)}
+.top-nav .brand-name{font-size:14px;font-weight:600;letter-spacing:-0.3px}
+.top-nav .brand-name span{color:var(--accent)}
+.top-nav .live-pill{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid rgba(255,255,255,0.06);font-family:var(--font-mono);font-size:12px}
+.top-nav .live-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2-glow);animation:livePulse 2s infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
+.top-nav .live-pill .val{color:var(--ink-dim)}
+.top-nav .live-pill .val strong{color:var(--ink);margin-left:4px}
 
-/* Toast */
-.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
-.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:slideIn .3s ease;max-width:320px;font-size:13px}
-.toast.ok{border-left:3px solid var(--ok)}.toast.err{border-left:3px solid var(--err)}
-@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+/* ========== SCROLLABLE CONTENT ========== */
+.scroll-wrap{position:fixed;top:64px;left:0;right:0;bottom:0;z-index:10;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;padding:0 32px 120px}
+@media(max-width:768px){.scroll-wrap{padding:0 16px 100px}}
 
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9998}
-.modal-overlay.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.modal h3{color:var(--heading);margin-bottom:14px}
-.modal .actions{margin-top:18px;justify-content:flex-end}
+/* ========== HERO ========== */
+.hero{min-height:70vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;padding:60px 0}
+.hero-label{font-size:12px;text-transform:uppercase;letter-spacing:4px;color:var(--ink-faint);margin-bottom:24px;opacity:0;animation:fadeUp 1s ease forwards 0.3s}
+.hero-balance{font-family:var(--font-mono);font-size:clamp(48px,12vw,140px);font-weight:600;color:var(--ink);line-height:1;letter-spacing:-4px;position:relative;opacity:0;animation:fadeUp 1.2s ease forwards 0.5s}
+.hero-balance .unit{font-size:clamp(20px,4vw,40px);color:var(--ink-dim);font-weight:400;letter-spacing:0;margin-left:8px}
+.hero-balance .cursor{display:inline-block;width:3px;height:clamp(30px,6vw,80px);background:var(--accent);vertical-align:middle;margin-left:4px;animation:cursorBlink 1s step-end infinite}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-fiat{font-size:16px;color:var(--ink-dim);margin-top:16px;opacity:0;animation:fadeUp 1s ease forwards 0.8s}
+.hero-actions{display:flex;gap:12px;margin-top:40px;opacity:0;animation:fadeUp 1s ease forwards 1s}
+.hero-actions .hero-btn{appearance:none;border:none;padding:14px 28px;border-radius:14px;font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:8px}
+.hero-actions .hero-btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 32px var(--accent-glow)}
+.hero-actions .hero-btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px var(--accent-glow)}
+.hero-actions .hero-btn.ghost{background:var(--surface-raised);color:var(--ink);border:1px solid rgba(255,255,255,0.08)}
+.hero-actions .hero-btn.ghost:hover{background:rgba(255,255,255,0.05)}
 
-/* Misc */
-.empty{color:var(--muted);font-size:14px;padding:20px 0;text-align:center}
-.copy-wrap{display:flex;align-items:center;gap:8px}
-.copy-wrap input{flex:1;font-family:monospace;font-size:12px}
-.masked{-webkit-text-security:disc}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* Decorative orbit ring around balance */
+.orbit-ring{position:absolute;width:500px;height:500px;border-radius:50%;border:1px solid rgba(255,255,255,0.03);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:spin 60s linear infinite}
+.orbit-ring::before{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);top:-4px;left:50%;transform:translateX(-50%);box-shadow:0 0 12px var(--accent-glow)}
+.orbit-ring:nth-child(2){width:380px;height:380px;animation-direction:reverse;animation-duration:45s;border-color:rgba(0,212,170,0.04)}
+.orbit-ring:nth-child(2)::before{background:var(--accent2);box-shadow:0 0 12px var(--accent2-glow)}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* ========== GLASS STRIP ========== */
+.glass-strip{margin:40px auto;max-width:900px;display:flex;justify-content:space-around;align-items:center;padding:24px 32px;border-radius:20px;background:var(--surface-glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06);opacity:0;animation:fadeUp 1s ease forwards 1.2s}
+.glass-strip .strip-item{text-align:center}
+.glass-strip .strip-item .s-lab{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:6px}
+.glass-strip .strip-item .s-val{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--ink)}
+.glass-strip .strip-item .s-val.up{color:var(--accent2)}
+
+/* ========== PAYMENT RIVER ========== */
+.river-section{max-width:1000px;margin:80px auto 0;position:relative;opacity:0;animation:fadeUp 1s ease forwards 1.4s}
+.river-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:32px}
+.river-header h2{font-size:13px;text-transform:uppercase;letter-spacing:3px;color:var(--ink-faint);font-weight:500}
+.river-header .tabs{display:flex;gap:6px}
+.river-header .tab-btn{appearance:none;border:none;background:transparent;color:var(--ink-faint);font-family:var(--font-ui);font-size:13px;padding:6px 14px;border-radius:10px;cursor:pointer;transition:all .2s}
+.river-header .tab-btn:hover{color:var(--ink)}
+.river-header .tab-btn.active{background:rgba(255,255,255,0.06);color:var(--ink)}
+
+.river{display:flex;flex-direction:column;gap:0}
+.pay-row{display:flex;align-items:center;gap:20px;padding:20px 24px;border-radius:16px;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.pay-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(180deg,var(--accent),var(--accent2));transition:width .3s ease;border-radius:16px 0 0 16px;opacity:0.8}
+.pay-row:hover::before{width:3px}
+.pay-row:hover{background:var(--surface-raised);transform:translateX(4px)}
+.pay-row .pay-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:20px;flex-shrink:0;transition:transform .3s ease}
+.pay-row:hover .pay-icon{transform:scale(1.1)}
+.pay-row .pay-icon.in{background:linear-gradient(135deg,rgba(0,212,170,0.15),rgba(0,212,170,0.05));border:1px solid rgba(0,212,170,0.2);color:var(--accent2)}
+.pay-row .pay-icon.out{background:linear-gradient(135deg,rgba(255,107,53,0.15),rgba(255,107,53,0.05));border:1px solid rgba(255,107,53,0.2);color:var(--accent)}
+.pay-row .pay-icon.pending{background:linear-gradient(135deg,rgba(255,193,7,0.15),rgba(255,193,7,0.05));border:1px solid rgba(255,193,7,0.2);color:var(--warn)}
+.pay-row .pay-info{flex:1;min-width:0}
+.pay-row .pay-info .pay-who{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px;letter-spacing:-0.2px}
+.pay-row .pay-info .pay-meta{font-size:12px;color:var(--ink-faint);display:flex;gap:12px;align-items:center}
+.pay-row .pay-info .pay-meta .confirms{font-family:var(--font-mono);font-size:11px;background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:8px;color:var(--ink-dim)}
+.pay-row .pay-amt{font-family:var(--font-mono);font-size:18px;font-weight:600;white-space:nowrap;text-align:right;transition:color .3s}
+.pay-row .pay-amt.in{color:var(--accent2)}
+.pay-row .pay-amt.out{color:var(--accent)}
+.pay-row .pay-status{margin-left:16px;font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:20px;font-weight:600;flex-shrink:0}
+.pay-row .pay-status.done{background:rgba(0,212,170,0.1);color:var(--accent2)}
+.pay-row .pay-status.pending{background:rgba(255,193,7,0.1);color:var(--warn)}
+
+/* ========== FLOATING CARDS ========== */
+.float-section{max-width:1000px;margin:100px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;opacity:0;animation:fadeUp 1s ease forwards 1.6s}
+@media(max-width:768px){.float-section{grid-template-columns:1fr}}
+.float-card{padding:28px;border-radius:24px;background:var(--surface);border:1px solid rgba(255,255,255,0.04);position:relative;overflow:hidden;transition:all .4s cubic-bezier(.4,0,.2,1)}
+.float-card:hover{border-color:rgba(255,255,255,0.08);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.float-card .f-glow{position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(255,107,53,0.08),transparent 60%);opacity:0;transition:opacity .4s;pointer-events:none}
+.float-card:hover .f-glow{opacity:1}
+.float-card .f-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;margin-bottom:20px;font-size:18px}
+.float-card .f-icon.orange{background:linear-gradient(135deg,rgba(255,107,53,0.2),rgba(255,107,53,0.05));border:1px solid rgba(255,107,53,0.2);color:var(--accent)}
+.float-card .f-icon.teal{background:linear-gradient(135deg,rgba(0,212,170,0.2),rgba(0,212,170,0.05));border:1px solid rgba(0,212,170,0.2);color:var(--accent2)}
+.float-card .f-icon.purple{background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(124,58,237,0.05));border:1px solid rgba(124,58,237,0.2);color:#a78bfa}
+.float-card .f-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.float-card .f-value{font-family:var(--font-mono);font-size:28px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.float-card .f-hint{font-size:12px;color:var(--ink-dim)}
+
+/* ========== FAB ========== */
+.fab{position:fixed;bottom:32px;right:32px;z-index:100;width:60px;height:60px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:grid;place-items:center;box-shadow:0 8px 32px var(--accent-glow);transition:all .3s cubic-bezier(.4,0,.2,1)}
+.fab:hover{transform:scale(1.1);box-shadow:0 12px 40px var(--accent-glow)}
+.fab:active{transform:scale(0.95)}
+.fab .fab-icon{font-size:24px;color:#fff}
+
+/* ========== MODAL ========== */
+.modal-bg{position:fixed;inset:0;background:rgba(8,8,10,0.8);backdrop-filter:blur(20px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .4s ease}
+.modal-bg.open{display:flex;opacity:1}
+.modal-card{width:100%;max-width:420px;padding:40px;border-radius:32px;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.08);box-shadow:0 40px 80px rgba(0,0,0,0.4);transform:translateY(40px) scale(0.95);transition:transform .4s cubic-bezier(.4,0,.2,1);text-align:center}
+.modal-bg.open .modal-card{transform:translateY(0) scale(1)}
+.modal-card h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.modal-card p{color:var(--ink-dim);font-size:14px;margin-bottom:24px}
+.modal-card canvas{margin:0 auto 20px;display:block;border-radius:16px;background:#fff;padding:12px}
+.modal-card .url{font-family:var(--font-mono);font-size:12px;color:var(--ink-dim);word-break:break-all;margin-bottom:24px;padding:12px;border-radius:12px;background:var(--surface)}
+.modal-card .modal-btns{display:flex;gap:10px}
+.modal-card .modal-btns button{flex:1}
+
+/* ========== TOAST ========== */
+.toast-wrap{position:fixed;top:80px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--surface-raised);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:toastIn .5s cubic-bezier(.34,1.56,.64,1);max-width:320px;font-size:14px;color:var(--ink);font-weight:500;display:flex;align-items:center;gap:12px;backdrop-filter:blur(20px)}
+.toast .t-icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;font-size:14px}
+.toast.ok .t-icon{background:rgba(0,212,170,0.15);color:var(--accent2)}
+.toast.err .t-icon{background:rgba(255,107,53,0.15);color:var(--accent)}
+@keyframes toastIn{from{transform:translateX(60px) scale(0.9);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
+
+/* ========== UTILS ========== */
+.btn{appearance:none;border:none;padding:12px 24px;border-radius:14px;font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-fill{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-fill:hover{background:#ff5a1f}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid rgba(255,255,255,0.08)}
+.btn-ghost:hover{background:rgba(255,255,255,0.05)}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <header>Monero Merchant</header>
-    <nav>
-      <a href="#status" data-page="status" class="active"><span class="icon">&#9679;</span> Status</a>
-      <a href="#credentials" data-page="credentials"><span class="icon">&#128274;</span> Credentials</a>
-      <a href="#vendors" data-page="vendors"><span class="icon">&#128101;</span> Vendors</a>
-      <a href="#invites" data-page="invites"><span class="icon">&#128221;</span> Invites</a>
-      <a href="#transfers" data-page="transfers"><span class="icon">&#128178;</span> Transfers</a>
-      <a href="#settings" data-page="settings"><span class="icon">&#9881;</span> Settings</a>
-    </nav>
-    <footer>Admin Dashboard<br><span id="backend-version">v2.0</span></footer>
-  </aside>
 
-  <main class="main" id="main">
-    <!-- Content injected by JS -->
-  </main>
+<!-- Ambient orbs -->
+<div id="ambient">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+<div class="grain"></div>
+
+<!-- Nav -->
+<nav class="top-nav">
+  <div class="brand">
+    <div class="brand-mark">&#8381;</div>
+    <div class="brand-name">Monero <span>Merchant</span></div>
+  </div>
+  <div class="live-pill">
+    <span class="dot"></span>
+    <span class="val">Daemon <strong>Synced</strong></span>
+  </div>
+</nav>
+
+<!-- Scrollable -->
+<div class="scroll-wrap">
+
+<!-- Hero -->
+<section class="hero">
+  <div class="orbit-ring"></div>
+  <div class="orbit-ring"></div>
+  <div class="hero-label">Merchant Wallet</div>
+  <div class="hero-balance">
+    4.284731<span class="unit">XMR</span><span class="cursor"></span>
+  </div>
+  <div class="hero-fiat">≈ $781.43 USD at $182.45/XMR</div>
+  <div class="hero-actions">
+    <button class="hero-btn primary" onclick="showQr('monero:44...7a2B')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Receive
+    </button>
+    <button class="hero-btn ghost" onclick="toast('Withdraw modal','err')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+      Send
+    </button>
+  </div>
+</section>
+
+<!-- Glass strip -->
+<div class="glass-strip">
+  <div class="strip-item">
+    <div class="s-lab">Unlocked</div>
+    <div class="s-val up">3.892100</div>
+  </div>
+  <div class="strip-item">
+    <div class="s-lab">Locked</div>
+    <div class="s-val" style="color:var(--warn)">0.392631</div>
+  </div>
+  <div class="strip-item">
+    <div class="s-lab">Height</div>
+    <div class="s-val">3,674,892</div>
+  </div>
+  <div class="strip-item">
+    <div class="s-lab">Peers</div>
+    <div class="s-val">12</div>
+  </div>
+  <div class="strip-item">
+    <div class="s-lab">Today</div>
+    <div class="s-val up">+0.1843</div>
+  </div>
 </div>
 
-<div class="toast-container" id="toasts"></div>
+<!-- Payment River -->
+<section class="river-section">
+  <div class="river-header">
+    <h2>Payment History</h2>
+    <div class="tabs">
+      <button class="tab-btn active">All</button>
+      <button class="tab-btn">Received</button>
+      <button class="tab-btn">Sent</button>
+    </div>
+  </div>
+  <div class="river">
+    <div class="pay-row" onclick="showQr('monero:44abc...')">
+      <div class="pay-icon in">&#8595;</div>
+      <div class="pay-info">
+        <div class="pay-who">Coffee Shop — Downtown</div>
+        <div class="pay-meta">2 min ago <span class="confirms">8 confirms</span></div>
+      </div>
+      <div class="pay-amt in">+0.0521</div>
+      <span class="pay-status done">Done</span>
+    </div>
 
-<!-- Login overlay -->
-<div class="modal-overlay open" id="login-modal">
-  <div class="modal">
-    <h3>Admin Login</h3>
-    <div class="form-row" style="grid-template-columns:1fr">
-      <div>
-        <label>Username</label>
-        <input id="login-user" value="admin" readonly>
+    <div class="pay-row" onclick="showQr('monero:88def...')">
+      <div class="pay-icon pending">&#9716;</div>
+      <div class="pay-info">
+        <div class="pay-who">Web Design Services</div>
+        <div class="pay-meta">14 min ago <span class="confirms">2 / 10 confirms</span></div>
       </div>
+      <div class="pay-amt in">+0.2840</div>
+      <span class="pay-status pending">Pending</span>
     </div>
-    <div class="form-row" style="grid-template-columns:1fr">
-      <div>
-        <label>Password</label>
-        <input id="login-pass" type="password" placeholder="Enter admin password">
+
+    <div class="pay-row" onclick="showQr('monero:99ghi...')">
+      <div class="pay-icon in">&#8595;</div>
+      <div class="pay-info">
+        <div class="pay-who">Consulting — Alice</div>
+        <div class="pay-meta">1h ago <span class="confirms">42 confirms</span></div>
       </div>
+      <div class="pay-amt in">+1.2000</div>
+      <span class="pay-status done">Done</span>
     </div>
-    <div class="actions">
-      <button class="btn-primary" id="btn-login">Login</button>
+
+    <div class="pay-row" onclick="showQr('monero:22jkl...')">
+      <div class="pay-icon in">&#8595;</div>
+      <div class="pay-info">
+        <div class="pay-who">Sticker Pack Order</div>
+        <div class="pay-meta">3h ago <span class="confirms">180 confirms</span></div>
+      </div>
+      <div class="pay-amt in">+0.0084</div>
+      <span class="pay-status done">Done</span>
+    </div>
+
+    <div class="pay-row" onclick="showQr('monero:44mno...')">
+      <div class="pay-icon in">&#8595;</div>
+      <div class="pay-info">
+        <div class="pay-who">Monthly Subscription</div>
+        <div class="pay-meta">6h ago <span class="confirms">360 confirms</span></div>
+      </div>
+      <div class="pay-amt in">+0.5000</div>
+      <span class="pay-status done">Done</span>
+    </div>
+
+    <div class="pay-row" onclick="showQr('monero:88pqr...')">
+      <div class="pay-icon pending">&#9716;</div>
+      <div class="pay-info">
+        <div class="pay-who">VPN Service — Annual</div>
+        <div class="pay-meta">32 min ago <span class="confirms">1 / 10 confirms</span></div>
+      </div>
+      <div class="pay-amt in">+0.2400</div>
+      <span class="pay-status pending">Pending</span>
+    </div>
+  </div>
+</section>
+
+<!-- Floating Cards -->
+<section class="float-section">
+  <div class="float-card">
+    <div class="f-glow"></div>
+    <div class="f-icon orange">&#9829;</div>
+    <div class="f-title">Active Vendors</div>
+    <div class="f-value">4</div>
+    <div class="f-hint">Receiving payments</div>
+  </div>
+  <div class="float-card">
+    <div class="f-glow"></div>
+    <div class="f-icon teal">&#9733;</div>
+    <div class="f-title">Total Received</div>
+    <div class="f-value">2.04</div>
+    <div class="f-hint">XMR this month</div>
+  </div>
+  <div class="float-card">
+    <div class="f-glow"></div>
+    <div class="f-icon purple">&#9851;</div>
+    <div class="f-title">Pending</div>
+    <div class="f-value">0.52</div>
+    <div class="f-hint">Awaiting confirms</div>
+  </div>
+</section>
+
+</div><!-- /scroll-wrap -->
+
+<!-- FAB -->
+<button class="fab" onclick="showQr('monero:receive')">
+  <svg class="fab-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+</button>
+
+<!-- Modal -->
+<div class="modal-bg" id="qrModal" onclick="if(event.target===this)closeQr()">
+  <div class="modal-card">
+    <h3>Receive Payment</h3>
+    <p>Scan to send Monero to this address</p>
+    <canvas id="qrCanvas" width="220" height="220"></canvas>
+    <div class="url" id="qrUrl">monero:44abc123...</div>
+    <div class="modal-btns">
+      <button class="btn btn-fill" onclick="copy($('qrUrl').textContent);toast('Address copied')">Copy</button>
+      <button class="btn btn-ghost" onclick="closeQr()">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Confirm modal -->
-<div class="modal-overlay" id="confirm-modal">
-  <div class="modal">
-    <h3 id="confirm-title">Confirm</h3>
-    <p id="confirm-msg" style="color:var(--text);font-size:14px"></p>
-    <div class="actions">
-      <button class="btn-muted" onclick="closeConfirm()">Cancel</button>
-      <button class="btn-danger" id="btn-confirm">Confirm</button>
-    </div>
-  </div>
-</div>
+<!-- Toast -->
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-/* === STATE === */
-let token = localStorage.getItem('mm_token') || '';
-let refresh = localStorage.getItem('mm_refresh') || '';
-let currentPage = 'status';
-let apiBase = '';
-
-/* === UTILS === */
 const $ = id => document.getElementById(id);
-const qs = s => document.querySelector(s);
-const qsa = s => document.querySelectorAll(s);
 
-function showToast(msg, type='ok') {
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  $('toasts').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
+function toast(msg,type='ok'){
+  const el=document.createElement('div');el.className='toast '+type;
+  el.innerHTML='<div class="t-icon">'+(type==='ok'?'&#10003;':'&#9888;')+'</div><span>'+msg+'</span>';
+  $('toastWrap').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(20px)';setTimeout(()=>el.remove(),300)},3500);
 }
 
-function fmtDate(ts) {
-  if (!ts) return '-';
-  return new Date(ts * 1000).toLocaleString();
+function copy(t){navigator.clipboard?.writeText(t)}
+
+// QR stub
+drawQR=(text,cvs,s=220)=>{
+  const c=cvs.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,s,s);
+  c.fillStyle='#0c0c0c';
+  for(let i=0;i<15;i++)for(let j=0;j<15;j++)if(Math.random()>0.5)c.fillRect(20+i*12,20+j*12,10,10);
+  c.strokeStyle='#0c0c0c';c.lineWidth=3;
+  [[0,0],[s-44,0],[0,s-44]].forEach(([x,y])=>{c.strokeRect(x+12,y+12,20,20);c.fillRect(x+17,y+17,10,10)});
 }
 
-function fmtXMR(atomic) {
-  if (!atomic && atomic !== 0) return '-';
-  return (atomic / 1e12).toFixed(6) + ' XMR';
+function showQr(url){
+  $('qrUrl').textContent=url||'monero:address...';
+  drawQR($('qrUrl').textContent,$('qrCanvas'),220);
+  $('qrModal').classList.add('open');
 }
+function closeQr(){$('qrModal').classList.remove('open')}
 
-async function api(path, opts={}) {
-  const url = apiBase + path;
-  const headers = {'Content-Type':'application/json'};
-  if (token) headers['Authorization'] = 'Bearer ' + token;
-  try {
-    const res = await fetch(url, {...opts, headers:{...headers, ...opts.headers}});
-    if (res.status === 401 && refresh) {
-      const r2 = await fetch(apiBase + '/auth/refresh', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({refresh_token:refresh})
-      });
-      if (r2.ok) {
-        const d2 = await r2.json();
-        token = d2.access_token || '';
-        refresh = d2.refresh_token || '';
-        localStorage.setItem('mm_token', token);
-        localStorage.setItem('mm_refresh', refresh);
-        return api(path, opts);
-      }
-    }
-    return res;
-  } catch(e) {
-    throw e;
+// Animate counter on load
+let displayed=0;const target=4.284731;
+function tick(){
+  const el=document.querySelector('.hero-balance');
+  if(!el)return;
+  displayed+=(target-displayed)*0.08;
+  if(Math.abs(target-displayed)<0.00001){displayed=target;el.childNodes[0].textContent=target.toFixed(6);return}
+  el.childNodes[0].textContent=displayed.toFixed(6);
+  requestAnimationFrame(tick);
+}
+setTimeout(tick,600);
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
   }
-}
-
-function copy(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(()=>showToast('Copied!'));
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed'; ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('Copied!');
-  }
-}
-
-/* === LOGIN === */
-$('btn-login').onclick = async () => {
-  const pass = $('login-pass').value.trim();
-  if (!pass) return showToast('Enter password', 'err');
-  try {
-    const res = await fetch(apiBase + '/auth/login-admin', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name:'admin', password:pass})
-    });
-    const data = await res.json().catch(()=>({}));
-    if (!res.ok) {
-      showToast(data.message || 'Login failed', 'err');
-      return;
-    }
-    token = data.access_token || '';
-    refresh = data.refresh_token || '';
-    localStorage.setItem('mm_token', token);
-    localStorage.setItem('mm_refresh', refresh);
-    $('login-modal').classList.remove('open');
-    showToast('Logged in');
-    renderPage(currentPage);
-  } catch(e) {
-    showToast('Network error', 'err');
-  }
-};
-
-/* === ROUTING === */
-function navigate(page) {
-  currentPage = page;
-  qsa('.sidebar nav a').forEach(a => a.classList.toggle('active', a.dataset.page === page));
-  renderPage(page);
-}
-
-qsa('.sidebar nav a').forEach(a => {
-  a.onclick = e => {
-    e.preventDefault();
-    navigate(a.dataset.page);
-  };
 });
-
-window.addEventListener('hashchange', () => {
-  const h = location.hash.replace('#','') || 'status';
-  navigate(h);
-});
-
-/* === PAGES === */
-const pages = {
-  status: renderStatus,
-  credentials: renderCredentials,
-  vendors: renderVendors,
-  invites: renderInvites,
-  transfers: renderTransfers,
-  settings: renderSettings
-};
-
-function renderPage(page) {
-  const fn = pages[page] || pages.status;
-  $('main').innerHTML = '';
-  fn();
-}
-
-/* --- Status --- */
-function renderStatus() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--accent)">&#9679;</span> System Status</h1>
-    <div class="grid3">
-      <div class="card status-card">
-        <div class="label">Monero Node</div>
-        <div class="value" id="node-status"><span class="spin"></span></div>
-        <div class="sub" id="node-details">Checking...</div>
-      </div>
-      <div class="card status-card">
-        <div class="label">Backend</div>
-        <div class="value" id="be-status"><span class="dot ok"></span>Online</div>
-        <div class="sub" id="be-details">API reachable</div>
-      </div>
-      <div class="card status-card">
-        <div class="label">MoneroPay</div>
-        <div class="value" id="mp-status"><span class="spin"></span></div>
-        <div class="sub" id="mp-details">Checking...</div>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Wallet Balance</h2>
-      <div id="wallet-balance"><span class="spin"></span></div>
-    </div>
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <div class="actions">
-        <button class="btn-primary" onclick="navigate('invites')">Create Invite</button>
-        <button class="btn-primary" onclick="navigate('vendors')">View Vendors</button>
-        <button class="btn-primary" onclick="navigate('transfers')">Transfer Balance</button>
-      </div>
-    </div>
-  `;
-  loadStatus();
-}
-
-async function loadStatus() {
-  // Node + MoneroPay via public /api/status
-  try {
-    const res = await fetch(apiBase + '/api/status');
-    const data = await res.json().catch(()=>({}));
-    const mp = data.services?.MoneroPay || {};
-    const mpOk = mp.status === 200 && mp.services?.wallet_rpc && mp.services?.postgresql;
-    $('mp-status').innerHTML = mpOk ? '<span class="dot ok"></span>Online' : '<span class="dot err"></span>Offline';
-    $('mp-details').textContent = mpOk ? 'Wallet RPC + Postgres OK' : (data.status ? 'Service unavailable' : 'Not connected');
-    $('be-status').innerHTML = '<span class="dot ok"></span>Online';
-    $('be-details').textContent = 'API responding';
-  } catch(e) {
-    $('mp-status').innerHTML = '<span class="dot err"></span>Error';
-    $('be-status').innerHTML = '<span class="dot warn"></span>Check';
-  }
-
-  // Node info (admin only)
-  try {
-    const res = await api('/admin/balance');
-    if (res.ok) {
-      const bal = await res.json();
-      $('wallet-balance').innerHTML = `
-        <div class="grid3">
-          <div><div class="label">Total</div><div class="value" style="font-size:18px">${fmtXMR(bal.total)}</div></div>
-          <div><div class="label">Unlocked</div><div class="value" style="font-size:18px">${fmtXMR(bal.unlocked)}</div></div>
-          <div><div class="label">Locked</div><div class="value" style="font-size:18px">${fmtXMR(bal.locked)}</div></div>
-        </div>`;
-      $('node-status').innerHTML = '<span class="dot ok"></span>Synced';
-      $('node-details').textContent = 'Wallet RPC connected';
-    } else {
-      $('wallet-balance').innerHTML = '<div class="empty">Login to view balance</div>';
-      $('node-status').innerHTML = '<span class="dot warn"></span>Unknown';
-      $('node-details').textContent = 'Login to check node status';
-    }
-  } catch(e) {
-    $('wallet-balance').innerHTML = '<div class="empty">Unable to fetch balance</div>';
-  }
-}
-
-/* --- Credentials --- */
-function renderCredentials() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--accent2)">&#128274;</span> Credentials</h1>
-    <div class="card">
-      <h2>Admin Access Token</h2>
-      <div class="copy-wrap">
-        <input type="text" id="cred-access" value="${token||'Login to view'}" readonly class="${token?'':'masked'}">
-        <button class="btn-muted btn-sm" onclick="copy($('cred-access').value)">Copy</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Refresh Token</h2>
-      <div class="copy-wrap">
-        <input type="text" id="cred-refresh" value="${refresh||'Login to view'}" readonly class="${refresh?'':'masked'}">
-        <button class="btn-muted btn-sm" onclick="copy($('cred-refresh').value)">Copy</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>API Base URL</h2>
-      <div class="copy-wrap">
-        <input type="text" id="cred-url" value="${location.origin + apiBase}" readonly>
-        <button class="btn-muted btn-sm" onclick="copy($('cred-url').value)">Copy</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Connection URLs</h2>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Configure these in your Android POS client settings.</p>
-      <div class="copy-wrap" style="margin-bottom:8px">
-        <input type="text" value="${location.origin}" readonly>
-        <button class="btn-muted btn-sm" onclick="copy('${location.origin}')">Copy</button>
-      </div>
-    </div>
-  `;
-}
-
-/* --- Vendors --- */
-function renderVendors() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--accent2)">&#128101;</span> Vendors</h1>
-    <div class="card">
-      <h2>All Vendors</h2>
-      <div id="vendors-list"><span class="spin"></span></div>
-    </div>
-  `;
-  loadVendors();
-}
-
-async function loadVendors() {
-  try {
-    const res = await api('/admin/vendors');
-    if (!res.ok) { $('vendors-list').innerHTML = '<div class="empty">Login to view vendors</div>'; return; }
-    const data = await res.json();
-    const list = data.vendors || [];
-    if (!list.length) { $('vendors-list').innerHTML = '<div class="empty">No vendors yet</div>'; return; }
-    let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Subaddress</th><th>Balance</th><th>Created</th><th>Actions</th></tr></thead><tbody>`;
-    list.forEach(v => {
-      html += `<tr>
-        <td>${v.id}</td>
-        <td>${v.name||'-'}</td>
-        <td style="font-family:monospace;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${v.subaddress||'-'}</td>
-        <td>${fmtXMR(v.balance?.unlocked)}</td>
-        <td>${fmtDate(v.created_at)}</td>
-        <td>
-          <button class="btn-danger btn-sm" onclick="confirmDeleteVendor(${v.id},'${v.name||'Vendor'}')">Delete</button>
-        </td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    $('vendors-list').innerHTML = html;
-  } catch(e) {
-    $('vendors-list').innerHTML = '<div class="empty">Error loading vendors</div>';
-  }
-}
-
-let deleteVendorId = null;
-function confirmDeleteVendor(id, name) {
-  deleteVendorId = id;
-  $('confirm-title').textContent = 'Delete Vendor';
-  $('confirm-msg').textContent = `Are you sure you want to delete vendor "${name}" (ID: ${id})? This action cannot be undone.`;
-  $('confirm-modal').classList.add('open');
-  $('btn-confirm').onclick = async () => {
-    closeConfirm();
-    try {
-      const res = await api('/admin/delete', {
-        method:'POST',
-        body: JSON.stringify({vendor_id:deleteVendorId})
-      });
-      if (res.ok) { showToast('Vendor deleted'); loadVendors(); }
-      else showToast('Delete failed', 'err');
-    } catch(e) { showToast('Error', 'err'); }
-  };
-}
-function closeConfirm() {
-  $('confirm-modal').classList.remove('open');
-  deleteVendorId = null;
-}
-
-/* --- Invites --- */
-function renderInvites() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--accent2)">&#128221;</span> Invites</h1>
-    <div class="card">
-      <h2>Create Invite</h2>
-      <div class="form-row">
-        <div>
-          <label>Valid Until</label>
-          <input type="datetime-local" id="invite-until">
-        </div>
-        <div>
-          <label>Forced Vendor Name (optional)</label>
-          <input type="text" id="invite-name" placeholder="e.g. Cafe Barcelona">
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn-primary" id="btn-create-invite">Create Invite</button>
-      </div>
-      <pre id="invite-result" style="margin-top:14px;display:none"></pre>
-    </div>
-    <div class="card">
-      <h2>Recent Invites</h2>
-      <div id="invites-list"><div class="empty">No invites created yet</div></div>
-    </div>
-  `;
-  // Default valid until = now + 24h
-  const d = new Date(Date.now() + 86400000);
-  $('invite-until').value = d.toISOString().slice(0,16);
-  $('btn-create-invite').onclick = async () => {
-    const untilVal = $('invite-until').value;
-    const forced = $('invite-name').value.trim() || null;
-    if (!untilVal) return showToast('Select valid until date', 'err');
-    const until = Math.floor(new Date(untilVal).getTime()/1000);
-    try {
-      const res = await api('/admin/invite', {
-        method:'POST',
-        body: JSON.stringify({valid_until:until, forced_name:forced})
-      });
-      const data = await res.json();
-      $('invite-result').style.display = 'block';
-      $('invite-result').textContent = JSON.stringify(data, null, 2);
-      if (res.ok) showToast('Invite created');
-      else showToast(data.message||'Failed', 'err');
-    } catch(e) { showToast('Error', 'err'); }
-  };
-}
-
-/* --- Transfers --- */
-function renderTransfers() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--accent2)">&#128178;</span> Transfers</h1>
-    <div class="card">
-      <h2>Transfer Balance to Vendor</h2>
-      <div class="form-row" style="grid-template-columns:1fr auto">
-        <div>
-          <label>Vendor ID</label>
-          <input type="number" id="tx-vendor-id" min="1" placeholder="1">
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn-primary" id="btn-transfer">Initiate Transfer</button>
-        </div>
-      </div>
-      <pre id="tx-result" style="margin-top:14px;display:none"></pre>
-    </div>
-  `;
-  $('btn-transfer').onclick = async () => {
-    const id = parseInt($('tx-vendor-id').value);
-    if (!id || id < 1) return showToast('Enter a valid vendor ID', 'err');
-    try {
-      const res = await api('/admin/transfer-balance', {
-        method:'POST',
-        body: JSON.stringify({vendor_id:id})
-      });
-      const data = await res.json();
-      $('tx-result').style.display = 'block';
-      $('tx-result').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-      if (res.ok) showToast('Transfer initiated');
-      else showToast(data.message||'Transfer failed', 'err');
-    } catch(e) { showToast('Error', 'err'); }
-  };
-}
-
-/* --- Settings --- */
-function renderSettings() {
-  $('main').innerHTML = `
-    <h1><span style="color:var(--muted)">&#9881;</span> Settings</h1>
-    <div class="card">
-      <h2>Configuration</h2>
-      <p style="font-size:13px;color:var(--muted)">These values are configured via Umbrel app settings or your .env file.</p>
-      <div style="margin-top:14px">
-        <div class="form-row">
-          <div><label>Admin Name</label><input value="admin" readonly></div>
-          <div><label>Port</label><input value="8080" readonly></div>
-        </div>
-        <div class="form-row">
-          <div><label>MoneroPay Base URL</label><input id="set-mp-url" placeholder="Loading..." readonly></div>
-          <div><label>MoneroPay Callback URL</label><input id="set-cb-url" placeholder="Loading..." readonly></div>
-        </div>
-        <div class="form-row">
-          <div><label>Wallet RPC Endpoint</label><input id="set-wallet-rpc" placeholder="Loading..." readonly></div>
-          <div><label>Daemon RPC Endpoint</label><input id="set-daemon-rpc" placeholder="Loading..." readonly></div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Danger Zone</h2>
-      <div class="actions">
-        <button class="btn-danger" onclick="logout()">Logout</button>
-        <button class="btn-danger" onclick="localStorage.clear(); showToast('All local data cleared'); setTimeout(()=>location.reload(),800)">Clear Local Data</button>
-      </div>
-    </div>
-  `;
-  // Try to populate from a hypothetical /api/config endpoint; for now leave as placeholders
-}
-
-function logout() {
-  token = ''; refresh = '';
-  localStorage.removeItem('mm_token');
-  localStorage.removeItem('mm_refresh');
-  $('login-modal').classList.add('open');
-  showToast('Logged out');
-}
-
-/* === INIT === */
-if (location.hash) currentPage = location.hash.replace('#','');
-if (!token) $('login-modal').classList.add('open');
-else $('login-modal').classList.remove('open');
-renderPage(currentPage);
 </script>
 </body>
 </html>
