@@ -14,7 +14,6 @@ if [[ -f "$UMBREL_MONERO_ENV" ]]; then
   DAEMON_PASS="${APP_MONERO_RPC_PASS:-}"
   MONERO_NETWORK="${APP_MONERO_NETWORK:-mainnet}"
 else
-  # Fallback for non-Umbrel or missing monero app
   DAEMON_HOST="${APP_MONERO_DAEMON_RPC_HOSTNAME:-host.docker.internal}"
   DAEMON_PORT="${APP_MONERO_DAEMON_RPC_PORT:-18089}"
   DAEMON_USER="${APP_MONERO_DAEMON_RPC_USERNAME:-}"
@@ -56,7 +55,11 @@ EOF
 fi
 
 # Source secrets for use in .env generation
-export $(grep -v '^#' "${SECRETS_FILE}" | xargs)
+while IFS='=' read -r key value; do
+  [[ "$key" =~ ^[[:space:]]*# ]] && continue
+  [[ -z "$key" ]] && continue
+  eval "export ${key}=\"${value}\""
+done < "${SECRETS_FILE}"
 
 # Build daemon RPC endpoint
 DAEMON_ENDPOINT="http://${DAEMON_HOST}:${DAEMON_PORT}/json_rpc"

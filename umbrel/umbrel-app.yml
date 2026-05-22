@@ -2,7 +2,7 @@ manifestVersion: 1
 id: monero-merchant
 category: finance
 name: Monero Merchant
-version: "2.0.0-umbrel1"
+version: "2.0.0-umbrel7"
 tagline: Accept Monero payments with a self-hosted POS backend
 description: >-
   Monero Merchant is a free, open-source point-of-sale backend for accepting
@@ -15,13 +15,15 @@ description: >-
   managing invites, transfers, and credentials.
 
 
-  This app requires an external MoneroPay instance and Monero wallet-rpc.
-  Configure the connection details during setup.
+  This Umbrel app connects to the official Umbrel Monero node for blockchain
+  data and includes its own wallet-rpc service. Configure the MoneroPay
+  connection during setup.
 developer: Monero Merchant
 website: https://moneromerchant.com
 repo: https://github.com/Monero-Merchant/monero-merchant
 support: https://matrix.to/#/%23monero-merchant:matrix.org
-dependencies: []
+dependencies:
+  - monero
 port: 8080
 gallery:
   - 1.jpg
@@ -30,7 +32,9 @@ gallery:
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-releaseNotes: "Initial Umbrel release with auto-secret generation and admin dashboard"
+releaseNotes: >-
+  v2.0.0-umbrel7: Dark aurora admin dashboard, auto-secret generation,
+  curl-based digest auth for official Monero node, bundled wallet-rpc.
 torOnly: false
 
 submitter: brainchainz
@@ -42,55 +46,6 @@ userConfig:
     description: Password for logging into the admin dashboard
     type: password
     required: true
-
-  - name: MONERO_DAEMON_RPC_HOSTNAME
-    label: Monero Daemon RPC Hostname
-    description: Hostname of your Monero daemon (use host.docker.internal if running on the same host)
-    type: text
-    default: host.docker.internal
-    required: true
-
-  - name: MONERO_DAEMON_RPC_PORT
-    label: Monero Daemon RPC Port
-    description: RPC port of your Monero daemon
-    type: number
-    default: "18089"
-    required: true
-
-  - name: MONERO_DAEMON_RPC_USERNAME
-    label: Monero Daemon RPC Username
-    description: RPC username (leave empty if no auth)
-    type: text
-    default: ""
-    required: false
-
-  - name: MONERO_DAEMON_RPC_PASSWORD
-    label: Monero Daemon RPC Password
-    description: RPC password (leave empty if no auth)
-    type: password
-    default: ""
-    required: false
-
-  - name: MONERO_WALLET_RPC_ENDPOINT
-    label: Monero Wallet RPC Endpoint
-    description: Full URL to your monero-wallet-rpc
-    type: text
-    default: http://host.docker.internal:18083/json_rpc
-    required: true
-
-  - name: MONERO_WALLET_RPC_USERNAME
-    label: Wallet RPC Username
-    description: Wallet RPC username (leave empty if no auth)
-    type: text
-    default: ""
-    required: false
-
-  - name: MONERO_WALLET_RPC_PASSWORD
-    label: Wallet RPC Password
-    description: Wallet RPC password (leave empty if no auth)
-    type: password
-    default: ""
-    required: false
 
   - name: MONEROPAY_BASE_URL
     label: MoneroPay Base URL
@@ -105,3 +60,31 @@ userConfig:
     type: text
     default: http://monero-merchant_backend_1:8080/callback/
     required: true
+
+  - name: MONERO_DAEMON_RPC_HOSTNAME
+    label: Monero Daemon RPC Hostname (override)
+    description: Leave blank to auto-detect Umbrel Monero node
+    type: text
+    default: ""
+    required: false
+
+  - name: MONERO_DAEMON_RPC_PORT
+    label: Monero Daemon RPC Port (override)
+    description: Leave blank to auto-detect
+    type: number
+    default: ""
+    required: false
+
+  - name: MONERO_DAEMON_RPC_USERNAME
+    label: Monero Daemon RPC Username (override)
+    description: Leave blank to auto-detect
+    type: text
+    default: ""
+    required: false
+
+  - name: MONERO_DAEMON_RPC_PASSWORD
+    label: Monero Daemon RPC Password (override)
+    description: Leave blank to auto-detect
+    type: password
+    default: ""
+    required: false

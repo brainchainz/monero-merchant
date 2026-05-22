@@ -77,3 +77,24 @@ func (s *AdminService) DeleteVendor(ctx context.Context, vendorID uint) (httpErr
 
 	return s.vendorService.DeleteVendor(ctx, vendorID)
 }
+
+func (s *AdminService) ListInvites(ctx context.Context) ([]models.Invite, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.repo.ListInvites(ctx)
+}
+
+func (s *AdminService) ListAllTransactions(ctx context.Context) ([]*models.Transaction, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.repo.ListAllTransactions(ctx)
+}
+
+func (s *AdminService) ListAllPosDevices(ctx context.Context) ([]*models.Pos, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.repo.ListAllPosDevices(ctx)
+}

@@ -99,6 +99,13 @@ func LoadConfig() (*Config, error) {
 		WalletPassword: os.Getenv("WALLET_PASSWORD"),
 	}
 
+	// Load admin password override from file (set by in-app password change)
+	if dataDir := os.Getenv("APP_DATA_DIR"); dataDir != "" {
+		if b, err := os.ReadFile(dataDir + "/admin_password.txt"); err == nil && len(b) > 0 {
+			config.AdminPassword = string(b)
+		}
+	}
+
 	if period := os.Getenv("WALLET_AUTO_REFRESH_PERIOD"); period != "" {
 		value, err := strconv.ParseUint(period, 10, 32)
 		if err != nil {

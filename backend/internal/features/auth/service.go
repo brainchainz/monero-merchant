@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -150,6 +151,30 @@ func (s *AuthService) UpdatePosPassword(ctx context.Context, posID uint, vendorI
 	accessToken, newRefreshToken, err = s.generatePosToken(vendorID, posID, passwordVersion)
 	if err != nil {
 		return "", "", err
+	}
+
+	return accessToken, newRefreshToken, nil
+}
+
+func (s *AuthService) UpdateAdminPassword(ctx context.Context, currentPassword string, newPassword string) (accessToken string, newRefreshToken string, err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if currentPassword != s.config.AdminPassword {
+		return "", "", errors.New("invalid current password")
+	}
+
+	// Write new password to override file so it persists across restarts
+	if dataDir := os.Getenv("APP_DATA_DIR"); dataDir != "" {
+		_ = os.WriteFile(dataDir+"/admin_password.txt", []byte(newPassword), 0600)
+	}
+	// Also update in-memory config
+	s.config.AdminPassword = newPassword
+
+	accessToken, newRefreshToken, err = s.generateAdminToken()
+	if err != nil {
+		return "", "", errors.New("failed to generate tokens")
 	}
 
 	return accessToken, newRefreshToken, nil

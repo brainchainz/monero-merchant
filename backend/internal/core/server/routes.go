@@ -115,6 +115,9 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 		r.Get("/admin/balance", adminHandler.GetWalletBalance)
 		r.Post("/admin/transfer-balance", adminHandler.TransferBalance)
 		r.Post("/admin/delete", adminHandler.DeleteVendor)
+		r.Get("/admin/invites", adminHandler.ListInvites)
+		r.Get("/admin/transactions", adminHandler.ListTransactions)
+		r.Get("/admin/pos-devices", adminHandler.ListPosDevices)
 
 		// Vendor routes
 		r.Post("/vendor/delete", vendorHandler.DeleteVendor)

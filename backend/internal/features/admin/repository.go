@@ -10,6 +10,10 @@ import (
 type AdminRepository interface {
 	CreateInvite(ctx context.Context, invite *models.Invite) (*models.Invite, error)
 	ListVendorsWithBalances(ctx context.Context) ([]VendorSummary, error)
+	ListInvites(ctx context.Context) ([]models.Invite, error)
+	ListAllTransactions(ctx context.Context) ([]*models.Transaction, error)
+	ListAllPosDevices(ctx context.Context) ([]*models.Pos, error)
+	GetVendorByID(ctx context.Context, vendorID uint) (*models.Vendor, error)
 }
 
 type adminRepository struct {
@@ -48,4 +52,62 @@ func (r *adminRepository) ListVendorsWithBalances(ctx context.Context) ([]Vendor
 	}
 
 	return results, nil
+}
+
+func (r *adminRepository) ListInvites(ctx context.Context) ([]models.Invite, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	var invites []models.Invite
+	err := r.db.WithContext(ctx).
+		Order("created_at DESC").
+		Find(&invites).Error
+	if err != nil {
+		return nil, err
+	}
+	return invites, nil
+}
+
+func (r *adminRepository) ListAllTransactions(ctx context.Context) ([]*models.Transaction, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	var transactions []*models.Transaction
+	err := r.db.WithContext(ctx).
+		Preload("SubTransactions").
+		Preload("Pos").
+		Preload("Vendor").
+		Order("created_at DESC").
+		Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, nil
+}
+
+func (r *adminRepository) ListAllPosDevices(ctx context.Context) ([]*models.Pos, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	var devices []*models.Pos
+	err := r.db.WithContext(ctx).
+		Preload("Vendor").
+		Where("deleted_at IS NULL").
+		Order("created_at DESC").
+		Find(&devices).Error
+	if err != nil {
+		return nil, err
+	}
+	return devices, nil
+}
+
+func (r *adminRepository) GetVendorByID(ctx context.Context, vendorID uint) (*models.Vendor, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	var vendor models.Vendor
+	if err := r.db.WithContext(ctx).First(&vendor, vendorID).Error; err != nil {
+		return nil, err
+	}
+	return &vendor, nil
 }

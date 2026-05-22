@@ -265,6 +265,24 @@ func (h *AuthHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(resp)
 		return
+	case "admin":
+		// Admin updating own password
+		if req.CurrentPassword == "" {
+			http.Error(w, "Current password required", http.StatusBadRequest)
+			return
+		}
+		accessToken, refreshToken, err := h.service.UpdateAdminPassword(ctx, req.CurrentPassword, req.NewPassword)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		resp := loginResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+		return
 	}
 
 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
