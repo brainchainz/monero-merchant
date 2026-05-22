@@ -291,7 +291,7 @@ async function init(){
     }
     updateSettingsUI();
   }catch(e){}
-  const y=Math.floor(Date.now()/1000)+315****6000; if($('inviteValid')) $('inviteValid').value=y;
+  const y=Math.floor(Date.now()/1000)+31536000; if($('inviteValid')) $('inviteValid').value=y;
 }
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
 function clearTokens(){tokens={access:null,refresh:null};localStorage.removeItem('mm_tokens');}
