@@ -157,7 +157,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
     <h2>Monero Merchant</h2>
     <p>Admin Dashboard</p>
     <div class="field"><label>Username</label><input type="text" id="loginUser" value="admin" autocomplete="username"></div>
-    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="Any password first time" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="loginError"></div>
   </div>
@@ -252,13 +252,11 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
     <div class="section" id="sec-settings">
       <div class="section-title">Settings</div>
       <div class="card" style="max-width:640px">
-        <div class="card-header"><h3 class="card-title"><span class="dot"></span>Change Admin Password</h3></div>
-        <div class="form">
-          <div class="field"><label>Current Password</label><input type="password" id="pwdCurrent" autocomplete="current-password"></div>
-          <div class="field"><label>New Password</label><input type="password" id="pwdNew" autocomplete="new-password"></div>
-          <div class="field"><label>Confirm New Password</label><input type="password" id="pwdConfirm" autocomplete="new-password"></div>
-          <button class="btn-submit" id="pwdBtn" onclick="changePassword()">Update Password</button>
-        </div>
+        <div class="card-header"><h3 class="card-title"><span class="dot"></span><span id="pwdTitle">Change Admin Password</span></h3></div>
+        <div id="pwdCurrentWrap" class="field" style="margin-bottom:14px"><label>Current Password</label><input type="password" id="pwdCurrent" autocomplete="current-password"></div>
+        <div class="field" style="margin-bottom:14px"><label id="pwdNewLabel">New Password</label><input type="password" id="pwdNew" autocomplete="new-password"></div>
+        <div class="field" style="margin-bottom:14px"><label>Confirm Password</label><input type="password" id="pwdConfirm" autocomplete="new-password"></div>
+        <button class="btn-submit" id="pwdBtn" onclick="changePassword()">Update Password</button>
       </div>
     </div>
   </main>
@@ -277,12 +275,23 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 
 <script>
 const $=id=>document.getElementById(id),ATOMIC=1e12;
-let tokens={access:null,refresh:null},dataCache={vendors:[],txs:[],pos:[],invites:[]};
+let tokens={access:null,refresh:null},dataCache={vendors:[],txs:[],pos:[],invites:[]},passwordSet=true;
 
-function init(){
+async function init(){
   const s=localStorage.getItem('mm_tokens');
   if(s){try{tokens=JSON.parse(s);if(tokens.access){showApp();loadAll();}}catch(e){}}
-  const y=Math.floor(Date.now()/1000)+31536000; if($('inviteValid')) $('inviteValid').value=y;
+  try{
+    const r=await fetch('/api/status');
+    const d=await r.json().catch(()=>({}));
+    passwordSet=!!d.password_set;
+    if(!passwordSet){
+      const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
+      const ld=await lr.json().catch(()=>({}));
+      if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
+    }
+    updateSettingsUI();
+  }catch(e){}
+  const y=Math.floor(Date.now()/1000)+315****6000; if($('inviteValid')) $('inviteValid').value=y;
 }
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
 function clearTokens(){tokens={access:null,refresh:null};localStorage.removeItem('mm_tokens');}
@@ -300,6 +309,12 @@ async function doLogin(){
 }
 function doLogout(){clearTokens();$('loginBg').classList.remove('hidden');$('topNav').style.display='none';$('appScreen').style.display='none';$('loginPass').value='';}
 function showApp(){$('loginBg').classList.add('hidden');$('topNav').style.display='flex';$('appScreen').style.display='flex';}
+
+function updateSettingsUI(){
+  const pw=$('pwdCurrentWrap'),tl=$('pwdTitle'),nl=$('pwdNewLabel');
+  if(passwordSet){pw.style.display='block';tl.textContent='Change Admin Password';nl.textContent='New Password';}
+  else{pw.style.display='none';tl.textContent='Set Admin Password';nl.textContent='Password';}
+}
 
 async function api(method,path,body){
   const h={'Content-Type':'application/json'};
@@ -439,7 +454,8 @@ async function delVendor(id,name){
 
 async function changePassword(){
   const cur=$('pwdCurrent').value, nw=$('pwdNew').value, cf=$('pwdConfirm').value;
-  if(!cur||!nw){toast('All fields required','err');return;}
+  if(!nw){toast('Password required','err');return;}
+  if(passwordSet&&!cur){toast('Current password required','err');return;}
   if(nw!==cf){toast('Passwords do not match','err');return;}
   if(nw.length<6){toast('Minimum 6 characters','err');return;}
   $('pwdBtn').disabled=true;
@@ -448,6 +464,7 @@ async function changePassword(){
     tokens.access=d.access_token;tokens.refresh=d.refresh_token;localStorage.setItem('mm_tokens',JSON.stringify(tokens));
     toast('Password updated — please login again','ok');
     $('pwdCurrent').value='';$('pwdNew').value='';$('pwdConfirm').value='';
+    passwordSet=true;updateSettingsUI();
     setTimeout(()=>{clearTokens();doLogout();},1200);
   }catch(e){toast('Update failed','err');}finally{$('pwdBtn').disabled=false;}
 }

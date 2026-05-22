@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"time"
@@ -99,7 +100,14 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 		r.Get("/misc/health", miscHandler.GetHealth)
 
 		// Dashboard API — public status endpoint (no auth required)
-		r.Get("/api/status", miscHandler.GetHealth)
+		r.Get("/api/status", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"password_set": cfg.AdminPassword != "",
+				"version":      "2.1.0",
+			})
+		})
+		r.Get("/misc/health", miscHandler.GetHealth)
 	})
 
 	// Protected routes

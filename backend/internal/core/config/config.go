@@ -116,7 +116,6 @@ func LoadConfig() (*Config, error) {
 
 	// Validate required fields
 	if config.AdminName == "" ||
-		config.AdminPassword == "" ||
 		config.Port == "" ||
 		config.DBHost == "" ||
 		config.DBUser == "" ||

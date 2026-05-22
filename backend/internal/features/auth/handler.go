@@ -266,11 +266,7 @@ func (h *AuthHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(resp)
 		return
 	case "admin":
-		// Admin updating own password
-		if req.CurrentPassword == "" {
-			http.Error(w, "Current password required", http.StatusBadRequest)
-			return
-		}
+		// Admin updating own password. If no password is set yet (first boot), allow setting without current password.
 		accessToken, refreshToken, err := h.service.UpdateAdminPassword(ctx, req.CurrentPassword, req.NewPassword)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

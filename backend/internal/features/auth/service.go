@@ -40,7 +40,11 @@ func (s *AuthService) AuthenticateAdmin(ctx context.Context, name string, passwo
 		ctx = context.Background()
 	}
 
-	if name != s.config.AdminName || password != s.config.AdminPassword {
+	if name != s.config.AdminName {
+		return "", "", errors.New("invalid credentials")
+	}
+	// If admin password is not set, allow any password (first boot setup)
+	if s.config.AdminPassword != "" && password != s.config.AdminPassword {
 		return "", "", errors.New("invalid credentials")
 	}
 
@@ -161,7 +165,8 @@ func (s *AuthService) UpdateAdminPassword(ctx context.Context, currentPassword s
 		ctx = context.Background()
 	}
 
-	if currentPassword != s.config.AdminPassword {
+	// If a password is already set, require correct current password
+	if s.config.AdminPassword != "" && currentPassword != s.config.AdminPassword {
 		return "", "", errors.New("invalid current password")
 	}
 
