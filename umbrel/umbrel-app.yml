@@ -2,7 +2,7 @@ manifestVersion: 1
 id: monero-merchant
 category: finance
 name: Monero Merchant
-version: "2.0.0-umbrel7"
+version: "2.1.0-umbrel11"
 tagline: Accept Monero payments with a self-hosted POS backend
 description: >-
   Monero Merchant is a free, open-source point-of-sale backend for accepting
@@ -25,6 +25,7 @@ support: https://matrix.to/#/%23monero-merchant:matrix.org
 dependencies:
   - monero
 port: 8080
+icon: https://raw.githubusercontent.com/brainchainz/umbrel-monero-merchant/main/brainchainz2-monero-merchant/icon.png
 gallery:
   - 1.jpg
   - 2.jpg
@@ -33,19 +34,17 @@ path: ""
 defaultUsername: ""
 defaultPassword: ""
 releaseNotes: >-
-  v2.0.0-umbrel7: Dark aurora admin dashboard, auto-secret generation,
-  curl-based digest auth for official Monero node, bundled wallet-rpc.
+  v2.1.0-umbrel11: Fixed dashboard JS syntax error. Auto-login with configurable admin password. Logo in nav.
 torOnly: false
-
 submitter: brainchainz
 submission: https://github.com/Monero-Merchant/monero-merchant/pulls
 
 userConfig:
   - name: ADMIN_PASSWORD
-    label: Admin Password
-    description: Password for logging into the admin dashboard
+    label: Admin Password (Optional)
+    description: Set an initial password, or leave blank and set it later in Settings
     type: password
-    required: true
+    required: false
 
   - name: MONEROPAY_BASE_URL
     label: MoneroPay Base URL
@@ -58,7 +57,7 @@ userConfig:
     label: MoneroPay Callback URL
     description: URL MoneroPay should POST callbacks to
     type: text
-    default: http://monero-merchant_backend_1:8080/callback/
+    default: http://brainchainz2-monero-merchant_backend_1:8080/callback/
     required: true
 
   - name: MONERO_DAEMON_RPC_HOSTNAME

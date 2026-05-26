@@ -3,9 +3,13 @@ services:
     environment:
       APP_HOST: monero-merchant_backend_1
       APP_PORT: 8080
+      PROXY_AUTH_ADD: "false"
     image: getumbrel/app-proxy:1.7.0
     volumes:
       - "${APP_DATA_DIR}:/data"
+    networks:
+      - default
+      - umbrel_main_network
 
   backend:
     env_file:
@@ -18,7 +22,7 @@ services:
       PORT: "8080"
       SECRETS_FILE: ${APP_DATA_DIR}/.secrets
       ADMIN_NAME: admin
-    image: sirjamzalot/monero-merchant-backend:v2.0.0-umbrel7
+    image: sirjamzalot/monero-merchant-backend:v2.1.0-umbrel11
     restart: on-failure
     volumes:
       - ${APP_DATA_DIR}:/data
@@ -28,6 +32,7 @@ services:
       wallet-rpc:
         condition: service_started
     networks:
+      - default
       - umbrel_main_network
 
   db:
@@ -44,6 +49,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    networks:
+      - default
+      - umbrel_main_network
 
   wallet-rpc:
     env_file:
@@ -56,8 +64,10 @@ services:
     command:
       - "exec monero-wallet-rpc --wallet-dir=/wallet --daemon-address=${MONERO_DAEMON_HOST}:${MONERO_DAEMON_PORT} ${MONERO_WALLET_RPC_DAEMON_LOGIN} --rpc-bind-port=18082 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --disable-rpc-login --trusted-daemon --log-level=1"
     networks:
+      - default
       - umbrel_main_network
 
 networks:
+  default:
   umbrel_main_network:
     external: true

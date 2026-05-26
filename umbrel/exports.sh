@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-APP_DIR="${APP_DATA_DIR}"
+APP_DIR="${APP_DATA_DIR:-/home/umbrel/umbrel/app-data/monero-merchant}"
 mkdir -p "${APP_DIR}/postgres" "${APP_DIR}/wallet"
 
 # ── Auto-detect Umbrel Monero node credentials ──────────────────────────────
@@ -36,8 +36,8 @@ WALLET_PASS="${APP_MONERO_WALLET_RPC_PASSWORD:-}"
 MP_URL="${APP_MONEROPAY_BASE_URL:-http://host.docker.internal:5000}"
 MP_CALLBACK="${APP_MONEROPAY_CALLBACK_URL:-http://monero-merchant_backend_1:8080/callback/}"
 
-# Admin password
-ADMIN_PASSWORD="${APP_ADMIN_PASSWORD:-changeme}"
+# Admin password (blank = no password on first boot; set via Settings or APP_ADMIN_PASSWORD)
+ADMIN_PASSWORD="${APP_ADMIN_PASSWORD:-}"
 
 # ── Generate secrets file if it doesn't exist ────────────────────────────────
 SECRETS_FILE="${APP_DIR}/.secrets"
