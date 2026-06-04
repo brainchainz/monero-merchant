@@ -280,7 +280,7 @@ let tokens={access:null,refresh:null},dataCache={vendors:[],txs:[],pos:[],invite
 async function init(){
   // Check if password is set
   try{
-    const sr=await fetch('/api/status');
+    const sr=await fetch('/auth/admin-status');
     const sd=await sr.json().catch(()=>({}));
     passwordSet = sd.password_set !== false;
   }catch(e){passwordSet=true;}
@@ -288,7 +288,7 @@ async function init(){
   const s=localStorage.getItem('mm_tokens');
   if(s){try{tokens=JSON.parse(s);if(tokens.access){showApp();loadAll();updateSettingsUI();return;}}catch(e){}}
   
-  // If no password set, auto-login
+  // If no password set, auto-login with empty password
   if(!passwordSet){
     try{
       const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});

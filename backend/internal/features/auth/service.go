@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -170,10 +171,30 @@ func (s *AuthService) UpdateAdminPassword(ctx context.Context, currentPassword s
 		return "", "", errors.New("invalid current password")
 	}
 
-	// Write new password to override file so it persists across restarts
+	// Write new password to .env file for persistence
 	if dataDir := os.Getenv("APP_DATA_DIR"); dataDir != "" {
-		_ = os.WriteFile(dataDir+"/admin_password.txt", []byte(newPassword), 0600)
+		envPath := dataDir + "/.env"
+		content := ""
+		if b, err := os.ReadFile(envPath); err == nil {
+			content = string(b)
+		}
+		// Replace or add ADMIN_PASSWORD line
+		lines := []string{}
+		found := false
+		for _, line := range strings.Split(content, "\n") {
+			if strings.HasPrefix(line, "ADMIN_PASSWORD=") {
+				lines = append(lines, "ADMIN_PASSWORD="+newPassword)
+				found = true
+			} else {
+				lines = append(lines, line)
+			}
+		}
+		if !found {
+			lines = append(lines, "ADMIN_PASSWORD="+newPassword)
+		}
+		_ = os.WriteFile(envPath, []byte(strings.Join(lines, "\n")), 0600)
 	}
+
 	// Also update in-memory config
 	s.config.AdminPassword = newPassword
 

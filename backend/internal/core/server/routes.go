@@ -83,6 +83,7 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 	// Public routes
 	r.Group(func(r chi.Router) {
 		// Auth routes
+		r.Get("/auth/admin-status", authHandler.GetAdminStatus)
 		r.Post("/auth/login-admin", authHandler.LoginAdmin)
 		r.Post("/auth/login-vendor", authHandler.LoginVendor)
 		r.Post("/auth/login-pos", authHandler.LoginPos)

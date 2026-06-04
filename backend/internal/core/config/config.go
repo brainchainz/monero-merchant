@@ -76,9 +76,9 @@ func LoadConfig() (*Config, error) {
 
 		// JWT Configuration
 		JWTSecret:          os.Getenv("JWT_SECRET"),
-		JWTRefreshSecret:   os.Getenv("JWT_REFRESH_SECRET"),
-		JWTMoneroPaySecret: os.Getenv("JWT_MONEROPAY_SECRET"),
-		JWTLwsToken:        os.Getenv("JWT_LWS_TOKEN"),
+		JWTRefreshSecret:     os.Getenv("JWT_REFRESH_SECRET"),
+		JWTMoneroPaySecret:   os.Getenv("JWT_MONEROPAY_SECRET"),
+		JWTLwsToken:          os.Getenv("JWT_LWS_TOKEN"),
 
 		// MoneroPay API Configuration
 		MoneroPayBaseURL:     os.Getenv("MONEROPAY_BASE_URL"),
@@ -97,13 +97,6 @@ func LoadConfig() (*Config, error) {
 		// Wallet Settings
 		WalletName:     os.Getenv("WALLET_NAME"),
 		WalletPassword: os.Getenv("WALLET_PASSWORD"),
-	}
-
-	// Load admin password override from file (set by in-app password change)
-	if dataDir := os.Getenv("APP_DATA_DIR"); dataDir != "" {
-		if b, err := os.ReadFile(dataDir + "/admin_password.txt"); err == nil && len(b) > 0 {
-			config.AdminPassword = string(b)
-		}
 	}
 
 	if period := os.Getenv("WALLET_AUTO_REFRESH_PERIOD"); period != "" {
