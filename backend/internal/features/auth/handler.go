@@ -36,6 +36,13 @@ type loginResponse struct {
 	VendorID     uint   `json:"vendor_id,omitempty"`
 }
 
+func (h *AuthHandler) GetAdminStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]bool{
+		"password_set": h.service.config.AdminPassword != "",
+	})
+}
+
 func (h *AuthHandler) LoginAdmin(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()

@@ -278,15 +278,26 @@ const $=id=>document.getElementById(id),ATOMIC=1e12;
 let tokens={access:null,refresh:null},dataCache={vendors:[],txs:[],pos:[],invites:[]},passwordSet=true;
 
 async function init(){
-  const s=localStorage.getItem('mm_tokens');
-  if(s){try{tokens=JSON.parse(s);if(tokens.access){showApp();loadAll();return;}}catch(e){}}
-  // Auto-login: no password required for now
+  // Check if password is set
   try{
-    const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
-    const ld=await lr.json().catch(()=>({}));
-    if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
-  }catch(e){}
-  // Fallback: show login if auto-login fails
+    const sr=await fetch('/api/status');
+    const sd=await sr.json().catch(()=>({}));
+    passwordSet = sd.password_set !== false;
+  }catch(e){passwordSet=true;}
+  
+  const s=localStorage.getItem('mm_tokens');
+  if(s){try{tokens=JSON.parse(s);if(tokens.access){showApp();loadAll();updateSettingsUI();return;}}catch(e){}}
+  
+  // If no password set, auto-login
+  if(!passwordSet){
+    try{
+      const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
+      const ld=await lr.json().catch(()=>({}));
+      if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
+    }catch(e){}
+  }
+  
+  // Show login screen
   const y=Math.floor(Date.now()/1000)+31536000; if($('inviteValid')) $('inviteValid').value=y;
 }
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
