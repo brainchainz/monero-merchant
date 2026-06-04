@@ -160,6 +160,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
     <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="set your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="loginError"></div>
+    <pre id="debugPanel" style="margin-top:12px;font-size:10px;color:var(--ink-dim);max-height:200px;overflow:auto;text-align:left;background:var(--surface-raised);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);"></pre>
   </div>
 </div>
 
@@ -274,14 +275,27 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+// Debug helper - show messages on screen
+const DEBUG=true;
+function dbg(msg){
+  if(!DEBUG)return;
+  const el=document.getElementById('debugPanel');
+  if(el)el.textContent+='\n'+msg;
+  console.log('[MM]',msg);
+}
+window.onerror=function(msg,url,line,col,err){dbg('ERROR: '+msg+' at line '+line);};
+
 const $=id=>document.getElementById(id),ATOMIC=1e12;
 let tokens={access:null,refresh:null},dataCache={vendors:[],txs:[],pos:[],invites:[]},passwordSet=true;
 
+dbg('Script loaded. Defining init...');
+
 async function init(){
-  // Check if password is set
+  dbg('init() started');
   try{
     const sr=await fetch('/auth/admin-status');
-    const sd=await sr.json().catch(()=>({}));
+    dbg('admin-status response: '+sr.status);
+    const sd=await sr.json().catch(e=>{dbg('JSON parse error: '+e);return {};});
     passwordSet = sd.password_set !== false;
   }catch(e){passwordSet=true;}
   
@@ -304,14 +318,19 @@ function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
 function clearTokens(){tokens={access:null,refresh:null};localStorage.removeItem('mm_tokens');}
 
 async function doLogin(){
+  dbg('doLogin() called');
   const u=$('loginUser').value.trim(),p=$('loginPass').value;
+  dbg('user='+u+', pass len='+p.length);
   $('loginError').textContent='';$('loginBtn').disabled=true;
   try{
+    dbg('Fetching /auth/login-admin...');
     const r=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:u,password:p})});
-    const d=await r.json().catch(()=>({}));
+    dbg('login response status: '+r.status);
+    const d=await r.json().catch(e=>{dbg('login JSON parse error: '+e);return {};});
+    dbg('login response: '+JSON.stringify(d));
     if(!r.ok){$('loginError').textContent=d.error||'Invalid credentials';return;}
     tokens.access=d.access_token;tokens.refresh=d.refresh_token;saveTokens();showApp();loadAll();
-  }catch(e){$('loginError').textContent='Network error: '+e.message;
+  }catch(e){dbg('Login exception: '+e.message);$('loginError').textContent='Network error: '+e.message;
   }finally{$('loginBtn').disabled=false;}
 }
 function doLogout(){clearTokens();$('loginBg').classList.remove('hidden');$('topNav').style.display='none';$('appScreen').style.display='none';$('loginPass').value='';}
@@ -486,6 +505,7 @@ function navTo(page){
 }
 
 init();
+dbg('init() called');
 </script>
 </body>
 </html>
