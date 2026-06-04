@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/joho/godotenv"
@@ -52,6 +53,11 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	// Optional .env file — don't fail if absent (Umbrel passes env vars directly)
 	_ = godotenv.Load()
+
+	// If APP_DATA_DIR is set, also load .env from there (password may have been updated)
+	if dataDir := os.Getenv("APP_DATA_DIR"); dataDir != "" {
+		_ = godotenv.Load(filepath.Join(dataDir, ".env"))
+	}
 
 	// If SECRETS_FILE is set, generate and source secrets before building config
 	if secretsFile := os.Getenv("SECRETS_FILE"); secretsFile != "" {
