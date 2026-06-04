@@ -53,7 +53,7 @@ func (s *Server) Start() error {
 
 	s.runStartupSequence(ctx)
 
-	s.router = NewRouter(ctx, s.config, s.db, s.walletRPC, s.moneroPay)
+	s.router = NewRouter(ctx, s.config, s.db, s.walletRPC, s.daemonRPC, s.moneroPay)
 
 	server := &http.Server{
 		Addr:              "0.0.0.0:" + s.config.Port,

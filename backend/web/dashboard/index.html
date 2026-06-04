@@ -14,17 +14,13 @@
   --warn:#ffc107;--danger:#ff4d4d;--font-ui:'Instrument Sans',system-ui,sans-serif;--font-mono:'IBM Plex Mono',monospace;
 }
 html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(--ink);overflow:hidden}
-#ambient{position:fixed;inset:0;z-index:0;pointer-events:none}
-#ambient .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.4;animation:float 20s ease-in-out infinite}
-#ambient .orb:nth-child(1){width:600px;height:600px;background:var(--accent);top:-10%;left:-5%;animation-delay:0s}
-#ambient .orb:nth-child(2){width:500px;height:500px;background:var(--accent2);bottom:-10%;right:-5%;animation-delay:-7s}
-#ambient .orb:nth-child(3){width:400px;height:400px;background:#7c3aed;top:40%;left:40%;animation-delay:-14s;opacity:.2}
-@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-40px) scale(1.1)}66%{transform:translate(-20px,30px) scale(.95)}}
-.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat}
+
+/* Subtle gradient background instead of animated blur orbs */
+#ambient{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 20% 40%,rgba(255,107,53,.06),transparent 70%),radial-gradient(ellipse 60% 40% at 80% 60%,rgba(0,212,170,.04),transparent 70%)}
 
 .top-nav{position:fixed;top:0;left:0;right:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:linear-gradient(180deg,var(--bg) 0%,transparent 100%)}
 .top-nav .brand{display:flex;align-items:center;gap:10px}
-.top-nav .brand-mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center}
+.top-nav .brand-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:#fff;font-size:14px;box-shadow:0 0 20px var(--accent-glow)}
 .top-nav .brand-name{font-size:14px;font-weight:600;letter-spacing:-.3px}
 .top-nav .brand-name span{color:var(--accent)}
 .top-nav .live-pill{display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:var(--surface);border:1px solid rgba(255,255,255,.06);font-family:var(--font-mono);font-size:12px}
@@ -67,7 +63,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 .glass-strip{display:flex;justify-content:space-around;align-items:center;padding:20px 24px;border-radius:16px;background:var(--surface-glass);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.06);margin-bottom:24px;flex-wrap:wrap;gap:12px}
 .glass-strip .strip-item{text-align:center}
 .glass-strip .strip-item .s-lab{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--ink-faint);margin-bottom:4px}
-.glass-strip .strip-item .s-val{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--ink)}
+.glass-strip .s-val{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--ink)}
 
 .data-table{width:100%;border-collapse:collapse;font-size:13px}
 .data-table th{text-align:left;padding:12px 16px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint);font-weight:500;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -147,28 +143,37 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+
+/* Sync bar for Monero daemon */
+.sync-bar{margin-top:8px;padding:12px 16px;border-radius:12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--ink-dim);display:flex;align-items:center;gap:12px}
+.sync-bar .sync-dot{width:8px;height:8px;border-radius:50%}
+.sync-bar.synced .sync-dot{background:var(--accent2);box-shadow:0 0 8px var(--accent2-glow)}
+.sync-bar.syncing .sync-dot{background:var(--warn);box-shadow:0 0 8px rgba(255,193,7,.3);animation:livePulse 1s infinite}
+.sync-bar.offline .sync-dot{background:var(--danger)}
+.sync-bar strong{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
 
 <div class="login-bg" id="loginBg">
   <div class="login-card">
-    <div class="login-brand" style="background:transparent;box-shadow:none;border-radius:0"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAgKADAAQAAAABAAAAgAAAAABIjgR3AAAYV0lEQVR4Ae1deZAc1Xl/3T09x95aHSvt6r4QkpAEBqFCBwpFZFwEJMfByA42lYQInMTlUChVSVwxxT+pOBWDCRAF27ENcUJMigQJBD5iEIeMJCQZxCEhraTVvbta7b1z9Jnf1z1Hz3TPTE/PjIaV+6sp7evX7+rve++73veeuOEH5jIfaocBvnZd+z0TBnwC1Hge+ATwCVBjDNS4e38F+ASoMQZq3L2/AnwC1BgDNe7eXwE+AWqMgRp3768AnwA1xkCNu/dXgE+AGmOgxt37K8AnQI0xUOPu/RXgE6DGGKhx9/4K8AlQYwzUuHt/BfgEqDEGaty9vwJqTIDAZepf15Mdcdxl6nGcdFNNAqgKw4/pLBCkH1CvaUxJ6KrCIS2IjBfGCZaqOMxqEEBnsgTk8m1zhPk3CLOXc5Nn8Y2twLguxfWRPu1Cp3ryN+rxA3r/ecbxLCBW8fs+9U1XmgCqDJwGlt0irrtHWHQTF25wwMA1tyBTH76oHPqV/Ma/qyffZ0Lgt3Y1cJWMDZXifMdVod//68CKDQ54d8yS4tLbz0kvP64P9zEx5FgkX2ZKmOiAfGVKyeeISV52qBQBwHYS4spNoc2PcE2TSv0K7eyR+DN/pZ44yILhonWBJeBJ1ZisczonBERRDIXxhxEhNE+0gFSSOQgnOcF0jfHQDC8fJSpEADkevOWPQ5sfZrxHnqaP9Md+8HX1o11MzEsDwgrHopI+FNNGJU3SgHOwrkAoEmlqnTSpfXpjq0F7iPrSMGisIUVSY8PKwAVl8IKukAwrOhUqUqASBJBi4prN4Xv/yZg73kelj/bHHr9XPfkeE4P2VjDxFVXvGdUGoqqqE4LTDIMmvqbzgtA6tX3WoqXhhkamqvYWiuTQyiKrSIsOJc4dUYa6zccitcp+LfzN9RPKakSRhDnXhrc8xZXIwe2dcsGIMP965cBOJsVyPh7IiSv6qQFlKK4RorLZNZRajvgGGxsa7O85X9/YHG5spNVRKqCKrnNiWJzQjoQ6eilD5FKbcl2exu0dMGIxHLr7YVPb0Qa7PTaFCTw2iLp8+8LgHQ8a1kOmJUx2WdVP9StRWecLMmcsgkQs9smBPcN9vd6XI8QAY6GOq4NT5zOt9JWUGbirVHkEIMF7J5R9sytp55PyW8+56ja7UOKFf4BKauaJa+4W5qxgqpQugpl8dkjFCiiMfbM8z/OyLHUeOiDHsYwKkivdgUOClkKofVGgZWq1aVAGATD9w/WQvZnxK3EoM/LeFzM5LlKJ7d9JvPRYmucQB1j/VbKZDQDS+6PacFxzg/1kFZ6PjQyfOXq4DAKgJcgZHuuAgw2PdNWgDAIosjDvM/yMxZmx8YKuyiXRQNrxqPTSY/SRltkaWHYr19phTj1FY31jaqkzGbyo9+ypscF+74yISKDxdc2B1ul6ajZkvrRyKe8EgJQKLF1vRRyNCtqbaxokdnwnsePRpJvI8klcY6sw73q0g1mPuQ/mY6GOpVzBpByPXug8XLCIi5e6Hpw8kwNDgl5QHXngnQBQe6D/OHxEkgZbC/MiYF/a8Zgd+2aDwrzrDOWcDULtceijUJZG9hRrXnJjZM0XyKrwoA6lm8ciCNWHb/+L4M1f4SfOgLGZoyCkC3pOeLSbsDy5SBM3scO5Y6KBAl6Et+KNm+xlwPfBefJhH+X5qfNh5EqKHpNJ73QLmqYp8oTr1nf8wdeblt7ECQJ7dRvrg... [truncated]
+    <div class="login-brand">M</div>
     <h2>Monero Merchant</h2>
     <p>Admin Dashboard</p>
     <div class="field"><label>Username</label><input type="text" id="loginUser" value="admin" autocomplete="username"></div>
     <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="set your password" autocomplete="current-password"></div>
     <button class="btn-login" id="loginBtn">Sign In</button>
     <div class="login-error" id="loginError"></div>
-    <pre id="debugPanel" style="margin-top:12px;font-size:10px;color:var(--ink-dim);max-height:200px;overflow:auto;text-align:left;background:var(--surface-raised);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.06);"></pre>
   </div>
 </div>
 
-<div id="ambient"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div>
-<div class="grain"></div>
+<div id="ambient"></div>
 
 <nav class="top-nav" id="topNav" style="display:none">
-  <div class="brand"><div style="display:flex;align-items:center;gap:10px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAgKADAAQAAAABAAAAgAAAAABIjgR3AAAYV0lEQVR4Ae1deZAc1Xl/3T09x95aHSvt6r4QkpAEBqFCBwpFZFwEJMfByA42lYQInMTlUChVSVwxxT+pOBWDCRAF27ENcUJMigQJBD5iEIeMJCQZxCEhraTVvbta7b1z9Jnf1z1Hz3TPTE/PjIaV+6sp7evX7+rve++73veeuOEH5jIfaocBvnZd+z0TBnwC1Hge+ATwCVBjDNS4e38F+ASoMQZq3L2/AnwC1BgDNe7eXwE+AWqMgRp3768AnwA1xkCNu/dXgE+AGmOgxt37K8AnQI0xUOPu/RXgE6DGGKhx9/4K8AlQYwzUuHt/BfgEqDEGaty9vwJqTIDAZepf15Mdcdxl6nGcdFNNAqgKw4/pLBCkH1CvaUxJ6KrCIS2IjBfGCZaqOMxqEEBnsgTk8m1zhPk3CLOXc5Nn8Y2twLguxfWRPu1Cp3ryN+rxA3r/ecbxLCBW8fs+9U1XmgCqDJwGlt0irrtHWHQTF25wwMA1tyBTH76oHPqV/Ma/qyffZ0Lgt3Y1cJWMDZXifMdVod//68CKDQ54d8yS4tLbz0kvP64P9zEx5FgkX2ZKmOiAfGVKyeeISV52qBQBwHYS4spNoc2PcE2TSv0K7eyR+DN/pZ44yILhonWBJeBJ1ZisczonBERRDIXxhxEhNE+0gFSSOQgnOcF0jfHQDC8fJSpEADkevOWPQ5sfZrxHnqaP9Md+8HX1o11MzEsDwgrHopI+FNNGJU3SgHOwrkAoEmlqnTSpfXpjq0F7iPrSMGisIUVSY8PKwAVl8IKukAwrOhUqUqASBJBi4prN4Xv/yZg73kelj/bHHr9XPfkeE4P2VjDxFVXvGdUGoqqqE4LTDIMmvqbzgtA6tX3WoqXhhkamqvYWiuTQyiKrSIsOJc4dUYa6zccitcp+LfzN9RPKakSRhDnXhrc8xZXIwe2dcsGIMP965cBOJsVyPh7IiSv6qQFlKK4RorLZNZRajvgGGxsa7O85X9/YHG5spNVRKqCKrnNiWJzQjoQ6eilD5FKbcl2exu0dMGIxHLr7YVPb0Qa7PTaFCTw2iLp8+8LgHQ8a1kOmJUx2WdVP9StRWecLMmcsgkQs9smBPcN9vd6XI8QAY6GOq4NT5zOt9JWUGbirVHkEIMF7J5R9sytp55PyW8+56ja7UOKFf4BKauaJa+4W5qxgqpQugpl8dkjFCiiMfbM8z/OyLHUeOiDHsYwKkivdgUOClkKofVGgZWq1aVAGATD9w/WQvZnxK3EoM/LeFzM5LlKJ7d9JvPRYmucQB1j/VbKZDQDS+6PacFxzg/1kFZ6PjQyfOXq4DAKgJcgZHuuAgw2PdNWgDAIosjDvM/yMxZmx8YKuyiXRQNrxqPTSY/SRltkaWHYr19phTj1FY31jaqkzGbyo9+ypscF+74yISKDxdc2B1ul6ajZkvrRyKe8EgJQKLF1vRRyNCtqbaxokdnwnsePRpJvI8klcY6sw73q0g1mPuQ/mY6GOpVzBpByPXug8XLCIi5e6Hpw8kwNDgl5QHXngnQBQe6D/OHxEkgZbC/MiYF/a8Zgd+2aDwrzrDOWcDULtceijUJZG9hRrXnJjZM0XyKrwoA6lm8ciCNWHb/+L4M1f4SfOgLGZoyCkC3pOeLSbsDy5SBM3scO5Y6KBAl6Et+KNm+xlwPfBefJhH+X5qfNh5EqKHpNJ73QLmqYp8oTr1nf8wdeblt7ECQJ7dRvrg... [truncated]
+  <div class="brand">
+    <div class="brand-mark">M</div>
+    <div class="brand-name">Monero <span>Merchant</span></div>
+  </div>
   <div style="display:flex;align-items:center;gap:16px">
     <div class="live-pill" id="statusPill"><span class="dot" id="statusDot"></span><span class="val" id="statusText">Checking...</span></div>
     <div class="nav-actions"><button class="btn-sm btn-logout" id="logoutBtn">Logout</button></div>
@@ -202,6 +207,10 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
         <div class="strip-item"><div class="s-lab">MoneroPay</div><div class="s-val" id="stripMp">--</div></div>
         <div class="strip-item"><div class="s-lab">POS Devices</div><div class="s-val" id="stripPos">--</div></div>
         <div class="strip-item"><div class="s-lab">Invites</div><div class="s-val" id="stripInvites">--</div></div>
+      </div>
+      <div class="sync-bar syncing" id="syncBar" style="display:none">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncText">Checking Monero node...</span>
       </div>
       <div class="card" style="margin-top:8px">
         <div class="card-header"><h3 class="card-title"><span class="dot"></span>Recent Transactions</h3><button class="btn btn-ghost" style="font-size:12px;padding:6px 14px" id="viewAllTxBtn">View All</button></div>
@@ -295,7 +304,7 @@ async function init(){
       if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
     }catch(e){}
   }
-  const y=Math.floor(Date.now()/1000)+3153600000; if($('inviteValid')) $('inviteValid').value=y;
+  const y=Math.floor(Date.now()/1000)+31536000; if($('inviteValid')) $('inviteValid').value=y;
 }
 
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
@@ -329,7 +338,7 @@ async function api(method,path,body){
   if(r.status===401&&tokens.refresh){
     const rr=await fetch('/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:tokens.refresh})});
     if(rr.ok){const d=await rr.json();tokens.access=d.access_token;tokens.refresh=d.refresh_token||tokens.refresh;saveTokens();h['Authorization']='Bearer '+tokens.access;r=await fetch(path,{method,headers:h,body:body?JSON.stringify(body):undefined});}
-    else{logout();throw new Error('Session expired');}
+    else{doLogout();throw new Error('Session expired');}
   }
   return r;
 }
@@ -340,16 +349,31 @@ function fmtDate(s){if(!s)return'-';const d=new Date(s);return d.toLocaleDateStr
 function toast(msg,ok){const e=document.createElement('div');e.className='toast '+(ok?'ok':'err');const icon=document.createElement('div');icon.className='t-icon';icon.textContent=ok?'OK':'!';e.appendChild(icon);const span=document.createElement('span');span.textContent=msg;e.appendChild(span);$('toastWrap').appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transform='translateX(20px)';setTimeout(()=>e.remove(),300)},3500);}
 function copy(t){navigator.clipboard?.writeText(t);toast('Copied','ok');}
 
-async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites()]);}
+async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites(),fetchDaemonStatus(),fetchBalance()]);}
 async function fetchHealth(){
   try{const r=await api('GET','/misc/health'),d=await r.json().catch(()=>({}));
-    const svc=d.services||{},dbOk=svc.postgresql,mpOk=svc.MoneroPay&&(svc.MoneroPay.status==='OK');
+    const svc=d.services||{},dbOk=svc.postgresql,mpOk=svc.MoneroPay&&(svc.MoneroPay.status===200||svc.MoneroPay.status==='OK');
     $('statusDot').style.background=dbOk&&mpOk?'var(--accent2)':'var(--warn)';
     $('statusDot').style.boxShadow=dbOk&&mpOk?'0 0 8px var(--accent2-glow)':'0 0 8px rgba(255,193,7,.3)';
     $('statusText').innerHTML='Daemon <strong>'+(dbOk&&mpOk?'Synced':'Issue')+'</strong>';
     $('stripDb').textContent=dbOk?'OK':'Down';$('stripDb').style.color=dbOk?'var(--accent2)':'var(--danger)';
     $('stripMp').textContent=mpOk?'OK':'Down';$('stripMp').style.color=mpOk?'var(--accent2)':'var(--warn)';
   }catch(e){$('statusDot').style.background='var(--danger)';$('statusText').innerHTML='Daemon <strong>Offline</strong>';}
+}
+async function fetchDaemonStatus(){
+  try{
+    const r=await api('GET','/api/daemon-status'),d=await r.json().catch(()=>({}));
+    const bar=$('syncBar'),txt=$('syncText'),dot=$('syncDot');
+    if(!bar)return;
+    bar.style.display='flex';
+    if(d.synced){
+      bar.className='sync-bar synced';txt.innerHTML='<strong>Monero Node:</strong> Synced at height '+d.height.toLocaleString();
+    }else if(d.height>0){
+      bar.className='sync-bar syncing';txt.innerHTML='<strong>Monero Node:</strong> Syncing — height '+d.height.toLocaleString()+(d.target_height?' / '+d.target_height.toLocaleString():'');
+    }else{
+      bar.className='sync-bar offline';txt.innerHTML='<strong>Monero Node:</strong> Unreachable';
+    }
+  }catch(e){if($('syncBar'))$('syncBar').style.display='none';}
 }
 async function fetchVendors(){
   try{const r=await api('GET','/admin/vendors'),d=await r.json().catch(()=>({}));
@@ -489,7 +513,6 @@ function navTo(page){
   $('sec-'+page).style.display='block';
 }
 
-// Event listeners (no inline handlers, CSP-safe)
 document.addEventListener('DOMContentLoaded',function(){
   $('loginBtn').addEventListener('click',doLogin);
   $('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});

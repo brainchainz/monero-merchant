@@ -23,8 +23,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// Accept a context tied to server lifecycle to stop background loops on shutdown
-func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *rpc.Client, moneroPayClient *moneropay.MoneroPayAPIClient) *chi.Mux {
+// Accept a context tied to server lifecycle to stop background workers on shutdown
+func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, walletRPC, daemonRPC *rpc.Client, moneroPayClient *moneropay.MoneroPayAPIClient) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Middleware
@@ -40,8 +40,8 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 		}
 	}
 
-	if rpcClient == nil {
-		rpcClient = rpc.NewClient(
+	if walletRPC == nil {
+		walletRPC = rpc.NewClient(
 			cfg.MoneroWalletRPCEndpoint,
 			cfg.MoneroWalletRPCUsername,
 			cfg.MoneroWalletRPCPassword,
@@ -57,7 +57,7 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 	miscRepository := misc.NewMiscRepository(db)
 
 	// Initialize services
-	vendorService := vendor.NewVendorService(vendorRepository, db, cfg, rpcClient, moneroPayClient)
+	vendorService := vendor.NewVendorService(vendorRepository, db, cfg, walletRPC, moneroPayClient)
 	vendorService.StartTransferCompleter(ctx, 30*time.Second) // Check every 30 seconds
 	adminService := admin.NewAdminService(adminRepository, cfg, vendorService)
 	authService := auth.NewAuthService(authRepository, cfg)
@@ -107,6 +107,36 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, rpcClient *
 				"password_set": cfg.AdminPassword != "",
 				"version":      "2.1.0",
 			})
+		})
+		// Daemon sync status (no auth required)
+		r.Get("/api/daemon-status", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			resp := map[string]interface{}{
+				"synced":        false,
+				"height":        0,
+				"target_height": 0,
+			}
+			if daemonRPC != nil {
+				var info struct {
+					Height              uint64 `json:"height"`
+					TargetHeight        uint64 `json:"target_height"`
+					Synchronized        bool   `json:"synchronized"`
+					Nettype             string `json:"nettype"`
+					IncomingConnections uint64 `json:"incoming_connections_count"`
+					OutgoingConnections uint64 `json:"outgoing_connections_count"`
+				}
+				ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+				defer cancel()
+				if err := daemonRPC.Call(ctx, "get_info", nil, &info); err == nil {
+					resp["synced"] = info.Synchronized
+					resp["height"] = info.Height
+					resp["target_height"] = info.TargetHeight
+					resp["nettype"] = info.Nettype
+					resp["incoming_connections"] = info.IncomingConnections
+					resp["outgoing_connections"] = info.OutgoingConnections
+				}
+			}
+			_ = json.NewEncoder(w).Encode(resp)
 		})
 		r.Get("/misc/health", miscHandler.GetHealth)
 	})
