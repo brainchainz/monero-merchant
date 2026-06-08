@@ -352,13 +352,24 @@ function copy(t){navigator.clipboard?.writeText(t);toast('Copied','ok');}
 async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites(),fetchDaemonStatus(),fetchBalance()]);}
 async function fetchHealth(){
   try{const r=await api('GET','/misc/health'),d=await r.json().catch(()=>({}));
-    const svc=d.services||{},dbOk=svc.postgresql,mpOk=svc.MoneroPay&&(svc.MoneroPay.status===200||svc.MoneroPay.status==='OK');
-    $('statusDot').style.background=dbOk&&mpOk?'var(--accent2)':'var(--warn)';
-    $('statusDot').style.boxShadow=dbOk&&mpOk?'0 0 8px var(--accent2-glow)':'0 0 8px rgba(255,193,7,.3)';
-    $('statusText').innerHTML='Daemon <strong>'+(dbOk&&mpOk?'Synced':'Issue')+'</strong>';
+    const svc=d.services||{},dbOk=svc.postgresql;
+    // MoneroPay health: it returns {status:200, services:{walletrpc,postgresql}} when OK
+    const mpData=svc.MoneroPay||{};
+    const mpOk=mpData.status===200||mpData.status==='OK'||(typeof mpData==='object'&&mpData.status!==undefined&&mpData.status!==503);
+    const walletOk=typeof mpData==='object'&&mpData.services?mpData.services.walletrpc:false;
+
+    // Live pill shows overall service status
+    const allOk=dbOk&&mpOk;
+    $('statusDot').style.background=allOk?'var(--accent2)':'var(--warn)';
+    $('statusDot').style.boxShadow=allOk?'0 0 8px var(--accent2-glow)':'0 0 8px rgba(255,193,7,.3)';
+    if(!dbOk&&!mpOk) $('statusText').innerHTML='Services <strong>DB + MoneroPay Down</strong>';
+    else if(!dbOk) $('statusText').innerHTML='Services <strong>DB Down</strong>';
+    else if(!mpOk) $('statusText').innerHTML='Services <strong>MoneroPay Down</strong>';
+    else $('statusText').innerHTML='Services <strong>OK</strong>';
+
     $('stripDb').textContent=dbOk?'OK':'Down';$('stripDb').style.color=dbOk?'var(--accent2)':'var(--danger)';
     $('stripMp').textContent=mpOk?'OK':'Down';$('stripMp').style.color=mpOk?'var(--accent2)':'var(--warn)';
-  }catch(e){$('statusDot').style.background='var(--danger)';$('statusText').innerHTML='Daemon <strong>Offline</strong>';}
+  }catch(e){$('statusDot').style.background='var(--danger)';$('statusText').innerHTML='Services <strong>Offline</strong>';}
 }
 async function fetchDaemonStatus(){
   try{
