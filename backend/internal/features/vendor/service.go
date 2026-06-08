@@ -517,6 +517,59 @@ func (s *VendorService) GetVendorAccountBalance(ctx context.Context, vendorID ui
 	return s.repo.GetBalance(ctx, vendorID)
 }
 
+// GetWalletAddress returns the primary wallet address for account 0.
+func (s *VendorService) GetWalletAddress(ctx context.Context) (string, *models.HTTPError) {
+	if s.rpcClient == nil {
+		return "", models.NewHTTPError(http.StatusInternalServerError, "wallet RPC client not configured")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var resp struct {
+		Address      string `json:"address"`
+		AddressIndex int    `json:"address_index"`
+		Used         bool   `json:"used"`
+	}
+	params := map[string]any{"account_index": 0, "address_index": 0}
+	if err := s.rpcClient.Call(ctx, "get_address", params, &resp); err != nil {
+		return "", models.NewHTTPError(http.StatusInternalServerError, "error retrieving wallet address: "+err.Error())
+	}
+	return resp.Address, nil
+}
+
+// GetWalletInfo returns the primary address, wallet name, and network type.
+func (s *VendorService) GetWalletInfo(ctx context.Context) (map[string]interface{}, *models.HTTPError) {
+	if s.rpcClient == nil {
+		return nil, models.NewHTTPError(http.StatusInternalServerError, "wallet RPC client not configured")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var addrResp struct {
+		Address      string `json:"address"`
+		AddressIndex int    `json:"address_index"`
+	}
+	addrParams := map[string]any{"account_index": 0, "address_index": 0}
+	if err := s.rpcClient.Call(ctx, "get_address", addrParams, &addrResp); err != nil {
+		return nil, models.NewHTTPError(http.StatusInternalServerError, "error retrieving wallet address: "+err.Error())
+	}
+
+	var netResp struct {
+		Nettype string `json:"nettype"`
+	}
+	if err := s.rpcClient.Call(ctx, "query_key", map[string]any{"key_type": "mnemonic"}, &netResp); err != nil {
+		// query_key doesn't always exist; ignore error
+	}
+
+	return map[string]interface{}{
+		"address": addrResp.Address,
+		"wallet_name": s.config.WalletName,
+		"network": netResp.Nettype,
+	}, nil
+}
+
 func (s *VendorService) CreateTransfer(ctx context.Context, vendorID uint) *models.HTTPError {
 	s.mu.Lock()
 	defer s.mu.Unlock()

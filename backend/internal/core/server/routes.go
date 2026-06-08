@@ -159,6 +159,8 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, walletRPC, 
 		r.Get("/admin/invites", adminHandler.ListInvites)
 		r.Get("/admin/transactions", adminHandler.ListTransactions)
 		r.Get("/admin/pos-devices", adminHandler.ListPosDevices)
+		r.Get("/admin/wallet-info", adminHandler.GetWalletInfo)
+		r.Get("/admin/connection-info", adminHandler.GetConnectionInfo)
 
 		// Vendor routes
 		r.Post("/vendor/delete", vendorHandler.DeleteVendor)

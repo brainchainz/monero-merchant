@@ -183,7 +183,8 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 <div class="app" id="appScreen" style="display:none">
   <aside class="sidebar">
     <div class="nav">
-      <div class="nav-item active" data-nav="dashboard"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"/></svg>Dashboard</div>
+      <div class="nav-item active" data-nav="home"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"/></svg>Home</div>
+      <div class="nav-item" data-nav="dashboard"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
       <div class="nav-item" data-nav="vendors"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Vendors</div>
       <div class="nav-item" data-nav="transactions"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Transactions</div>
       <div class="nav-item" data-nav="pos"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12h6"/></svg>POS Devices</div>
@@ -194,7 +195,23 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
   </aside>
 
   <main class="main">
-    <div class="section active" id="sec-dashboard">
+    <div class="section active" id="sec-home">
+      <div class="section-title">Welcome to Monero Merchant</div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><span class="dot"></span>Wallet Address</h3></div>
+        <div id="homeWalletWrap">
+          <div class="empty-state">Loading wallet info...</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"><span class="dot"></span>Connection Info</h3></div>
+        <div id="homeConnWrap">
+          <div class="empty-state">Loading connection info...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-dashboard">
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Wallet Total</div><div class="stat-value xmr" id="dashTotal">-- XMR</div></div>
         <div class="stat-card"><div class="stat-label">Unlocked</div><div class="stat-value" id="dashUnlocked">-- XMR</div></div>
@@ -349,7 +366,7 @@ function fmtDate(s){if(!s)return'-';const d=new Date(s);return d.toLocaleDateStr
 function toast(msg,ok){const e=document.createElement('div');e.className='toast '+(ok?'ok':'err');const icon=document.createElement('div');icon.className='t-icon';icon.textContent=ok?'OK':'!';e.appendChild(icon);const span=document.createElement('span');span.textContent=msg;e.appendChild(span);$('toastWrap').appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transform='translateX(20px)';setTimeout(()=>e.remove(),300)},3500);}
 function copy(t){navigator.clipboard?.writeText(t);toast('Copied','ok');}
 
-async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites(),fetchDaemonStatus(),fetchBalance()]);}
+async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites(),fetchDaemonStatus(),fetchBalance(),fetchWalletInfo(),fetchConnectionInfo()]);}
 async function fetchHealth(){
   try{const r=await api('GET','/misc/health'),d=await r.json().catch(()=>({}));
     const svc=d.services||{},dbOk=svc.postgresql;
@@ -419,6 +436,43 @@ async function fetchBalance(){
     const t=(d.total/ATOMIC).toFixed(6),u=(d.unlocked/ATOMIC).toFixed(6),l=(d.locked/ATOMIC).toFixed(6);
     $('dashTotal').textContent=t+' XMR';$('dashUnlocked').textContent=u+' XMR';$('stripLocked').textContent=l;
   }catch(e){}
+}
+async function fetchWalletInfo(){
+  try{const r=await api('GET','/admin/wallet-info'),d=await r.json().catch(()=>({}));
+    const wrap=$('homeWalletWrap');
+    if(!wrap)return;
+    if(d.address){
+      wrap.innerHTML='<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-raised);border-radius:12px;flex-wrap:wrap">'+
+        '<div style="font-family:var(--font-mono);font-size:14px;word-break:break-all;flex:1">'+esc(d.address)+'</div>'+
+        '<button class="btn btn-ghost" style="font-size:12px;padding:6px 14px" onclick="copy(\''+esc(d.address)+'\')">Copy</button>'+
+        '</div>'+
+        '<div style="margin-top:8px;font-size:12px;color:var(--ink-dim)">Wallet: '+esc(d.wallet_name||'merchant_wallet')+'</div>';
+    }else{
+      wrap.innerHTML='<div class="empty-state">Wallet not available — check wallet-rpc service</div>';
+    }
+  }catch(e){$('homeWalletWrap').innerHTML='<div class="empty-state">Failed to load wallet info</div>';}
+}
+async function fetchConnectionInfo(){
+  try{const r=await api('GET','/admin/connection-info'),d=await r.json().catch(()=>({}));
+    const wrap=$('homeConnWrap');
+    if(!wrap)return;
+    let h='<div style="display:grid;gap:12px">';
+    h+='<div><div style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Backend URL</div>'+
+      '<div style="font-family:var(--font-mono);font-size:13px;background:var(--surface-raised);padding:10px 12px;border-radius:8px">'+window.location.origin+'</div></div>';
+    if(d.admin_token){
+      h+='<div><div style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Admin Token (for POS client config)</div>'+
+        '<div style="display:flex;align-items:center;gap:10px"><div style="font-family:var(--font-mono);font-size:12px;background:var(--surface-raised);padding:10px 12px;border-radius:8px;flex:1;overflow:hidden;text-overflow:ellipsis">'+esc(d.admin_token.substring(0,30))+'...</div>'+
+        '<button class="btn btn-ghost" style="font-size:12px;padding:6px 14px" onclick="copy(\''+esc(d.admin_token)+'\')">Copy</button></div></div>';
+    }
+    if(d.endpoints){
+      h+='<div><div style="font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">API Endpoints</div>'+
+        '<div style="font-family:var(--font-mono);font-size:12px;background:var(--surface-raised);padding:10px 12px;border-radius:8px;display:grid;gap:4px">';
+      for(const[k,v]of Object.entries(d.endpoints)){h+='<div>'+esc(k)+': <span style="color:var(--accent2)">'+esc(v)+'</span></div>';}
+      h+='</div></div>';
+    }
+    h+='</div>';
+    wrap.innerHTML=h;
+  }catch(e){$('homeConnWrap').innerHTML='<div class="empty-state">Failed to load connection info</div>';}
 }
 
 function renderVendors(){
@@ -524,7 +578,7 @@ function navTo(page){
   // Hide all sections: remove both active class AND inline display
   document.querySelectorAll('.section').forEach(el=>{el.classList.remove('active');el.style.display='';});
   // Activate target nav
-  const idx=['dashboard','vendors','transactions','pos','invites','settings'].indexOf(page);
+  const idx=['home','dashboard','vendors','transactions','pos','invites','settings'].indexOf(page);
   if(idx>=0)document.querySelectorAll('.nav-item')[idx].classList.add('active');
   // Show target section
   const sec=$('sec-'+page);

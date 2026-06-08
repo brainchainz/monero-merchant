@@ -6,6 +6,7 @@ import (
 	"time"
 	"context"
 	"io"
+	"strings"
 
 	vendorfeature "github.com/monero-merchant/monero-merchant/backend/internal/features/vendor"
 	"github.com/monero-merchant/monero-merchant/backend/internal/core/models"
@@ -309,4 +310,68 @@ func (h *AdminHandler) ListPosDevices(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"devices": devices})
+}
+
+// GetWalletInfo returns the wallet address and metadata.
+func (h *AdminHandler) GetWalletInfo(w http.ResponseWriter, r *http.Request) {
+	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
+	if !ok || role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if h.vendorService == nil {
+		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	r = r.WithContext(ctx)
+
+	info, httpErr := h.vendorService.GetWalletInfo(ctx)
+	if httpErr != nil {
+		http.Error(w, httpErr.Message, httpErr.Code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(info)
+}
+
+// GetConnectionInfo returns endpoint URLs and API tokens for POS client setup.
+func (h *AdminHandler) GetConnectionInfo(w http.ResponseWriter, r *http.Request) {
+	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
+	if !ok || role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+	r = r.WithContext(ctx)
+
+	// Extract current access token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	var currentToken string
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		currentToken = strings.TrimPrefix(authHeader, "Bearer ")
+	}
+
+	resp := map[string]interface{}{
+		"backend_url":   "/", // relative; POS clients should use same origin
+		"api_version":   "v2.1.0",
+		"admin_token":   currentToken,
+		"endpoints": map[string]string{
+			"login":       "/auth/login-admin",
+			"vendors":     "/admin/vendors",
+			"transactions": "/admin/transactions",
+			"invites":     "/admin/invites",
+			"balance":     "/admin/balance",
+			"transfer":    "/admin/transfer-balance",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
 }
