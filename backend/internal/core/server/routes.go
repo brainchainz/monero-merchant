@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -187,6 +189,29 @@ func serveDashboard(w http.ResponseWriter, r *http.Request) {
 	if dir == "" {
 		dir = "./web/dashboard"
 	}
+
+	// Strip leading "/dashboard" to get the file path
+	path := strings.TrimPrefix(r.URL.Path, "/dashboard")
+	if path == "" || path == "/" {
+		path = "/index.html"
+	}
+
+	// Sanitize: prevent directory traversal
+	path = filepath.Clean("/" + path)
+	fullPath := filepath.Join(dir, path)
+
+	// Ensure it's still within the dashboard dir
+	if !strings.HasPrefix(fullPath, filepath.Clean(dir)) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// If file exists, serve it; otherwise serve index.html (SPA fallback)
+	if _, err := os.Stat(fullPath); err == nil {
+		http.ServeFile(w, r, fullPath)
+		return
+	}
+
 	indexPath := dir + "/index.html"
 	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
 		http.Error(w, "Dashboard not found", http.StatusNotFound)
