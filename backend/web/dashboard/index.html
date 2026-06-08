@@ -203,6 +203,27 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
           <div class="empty-state">Loading wallet info...</div>
         </div>
       </div>
+      <div class="card" id="homeWalletSetupCard" style="display:none">
+        <div class="card-header"><h3 class="card-title"><span class="dot" style="background:var(--warn)"></span>Wallet Setup</h3></div>
+        <div style="display:grid;gap:12px">
+          <p style="font-size:13px;color:var(--ink-dim)">No wallet file found. Create a new wallet or restore from seed.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-fill" id="setupWalletBtn">Create New Wallet</button>
+            <button class="btn btn-ghost" id="restoreWalletBtn">Restore from Seed</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="homeRestoreCard" style="display:none">
+        <div class="card-header"><h3 class="card-title"><span class="dot" style="background:var(--accent2)"></span>Restore Wallet</h3></div>
+        <div style="display:grid;gap:12px">
+          <div class="field"><label>Mnemonic Seed (25 words)</label><textarea id="restoreSeed" rows="3" style="width:100%;padding:12px 16px;border-radius:12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,.08);color:var(--ink);font-family:var(--font-ui);font-size:14px;resize:vertical"></textarea></div>
+          <div class="field"><label>Restore Height (optional — leave 0 for scan from beginning)</label><input type="number" id="restoreHeight" value="0" min="0"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-fill" id="confirmRestoreBtn">Restore</button>
+            <button class="btn btn-ghost" id="cancelRestoreBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-header"><h3 class="card-title"><span class="dot"></span>Connection Info</h3></div>
         <div id="homeConnWrap">
@@ -284,6 +305,12 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
         <div class="field" style="margin-bottom:14px"><label id="pwdNewLabel">New Password</label><input type="password" id="pwdNew" autocomplete="new-password"></div>
         <div class="field" style="margin-bottom:14px"><label>Confirm Password</label><input type="password" id="pwdConfirm" autocomplete="new-password"></div>
         <button class="btn-submit" id="pwdBtn">Update Password</button>
+      </div>
+      <div class="card" style="max-width:640px">
+        <div class="card-header"><h3 class="card-title"><span class="dot" style="background:var(--accent2)"></span>Wallet Seed Backup</h3></div>
+        <p style="font-size:13px;color:var(--ink-dim);margin-bottom:14px">Store your seed phrase somewhere safe. Anyone with this phrase can access your funds.</p>
+        <button class="btn btn-ghost" id="showSeedBtn" style="margin-bottom:12px">Reveal Seed Phrase</button>
+        <div id="seedDisplay" style="display:none;font-family:var(--font-mono);font-size:13px;padding:14px;border-radius:12px;background:var(--surface-raised);border:1px solid rgba(255,255,255,.08);color:var(--ink);word-break:break-all;line-height:1.6"></div>
       </div>
     </div>
   </main>
@@ -439,7 +466,7 @@ async function fetchBalance(){
 }
 async function fetchWalletInfo(){
   try{const r=await api('GET','/admin/wallet-info'),d=await r.json().catch(()=>({}));
-    const wrap=$('homeWalletWrap');
+    const wrap=$('homeWalletWrap'),setup=$('homeWalletSetupCard'),restore=$('homeRestoreCard');
     if(!wrap)return;
     if(d.address){
       wrap.innerHTML='<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-raised);border-radius:12px;flex-wrap:wrap">'+
@@ -447,11 +474,69 @@ async function fetchWalletInfo(){
         '<button class="btn btn-ghost" style="font-size:12px;padding:6px 14px" onclick="copy(\''+esc(d.address)+'\')">Copy</button>'+
         '</div>'+
         '<div style="margin-top:8px;font-size:12px;color:var(--ink-dim)">Wallet: '+esc(d.wallet_name||'merchant_wallet')+'</div>';
+      if(setup)setup.style.display='none';
+      if(restore)restore.style.display='none';
     }else{
-      wrap.innerHTML='<div class="empty-state">Wallet not available — check wallet-rpc service</div>';
+      wrap.innerHTML='<div class="empty-state">No wallet configured</div>';
+      if(setup)setup.style.display='block';
     }
   }catch(e){$('homeWalletWrap').innerHTML='<div class="empty-state">Failed to load wallet info</div>';}
 }
+
+async function doSetupWallet(){
+  $('setupWalletBtn').disabled=true;
+  try{
+    const r=await api('POST','/admin/setup-wallet',{});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast(d.error||'Wallet creation failed','err');return;}
+    toast('Wallet created','ok');
+    $('homeWalletSetupCard').style.display='none';
+    await fetchWalletInfo();
+    await fetchBalance();
+  }catch(e){toast('Wallet creation failed','err');}
+  finally{$('setupWalletBtn').disabled=false;}
+}
+
+function showRestoreCard(){
+  $('homeWalletSetupCard').style.display='none';
+  $('homeRestoreCard').style.display='block';
+}
+function hideRestoreCard(){
+  $('homeRestoreCard').style.display='none';
+  $('homeWalletSetupCard').style.display='block';
+}
+
+async function doRestoreWallet(){
+  const seed=$('restoreSeed').value.trim();
+  const height=parseInt($('restoreHeight').value)||0;
+  if(!seed){toast('Seed phrase required','err');return;}
+  $('confirmRestoreBtn').disabled=true;
+  try{
+    const r=await api('POST','/admin/restore-wallet',{seed,restore_height:height});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast(d.error||'Restore failed','err');return;}
+    toast('Wallet restored','ok');
+    $('homeRestoreCard').style.display='none';
+    $('restoreSeed').value='';
+    await fetchWalletInfo();
+    await fetchBalance();
+  }catch(e){toast('Restore failed','err');}
+  finally{$('confirmRestoreBtn').disabled=false;}
+}
+
+async function doShowSeed(){
+  const disp=$('seedDisplay');
+  if(disp.style.display==='block'){disp.style.display='none';$('showSeedBtn').textContent='Reveal Seed Phrase';return;}
+  try{
+    const r=await api('GET','/admin/wallet-seed');
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.seed){toast('Could not retrieve seed','err');return;}
+    disp.textContent=d.seed;
+    disp.style.display='block';
+    $('showSeedBtn').textContent='Hide Seed Phrase';
+  }catch(e){toast('Failed to retrieve seed','err');}
+}
+
 async function fetchConnectionInfo(){
   try{const r=await api('GET','/admin/connection-info'),d=await r.json().catch(()=>({}));
     const wrap=$('homeConnWrap');
@@ -602,6 +687,11 @@ document.addEventListener('DOMContentLoaded',function(){
   $('xferConfirmBtn').addEventListener('click',confirmXfer);
   $('xferCancelBtn').addEventListener('click',closeXfer);
   $('xferModal').addEventListener('click',function(e){if(e.target===this)closeXfer();});
+  $('setupWalletBtn').addEventListener('click',doSetupWallet);
+  $('restoreWalletBtn').addEventListener('click',showRestoreCard);
+  $('confirmRestoreBtn').addEventListener('click',doRestoreWallet);
+  $('cancelRestoreBtn').addEventListener('click',hideRestoreCard);
+  $('showSeedBtn').addEventListener('click',doShowSeed);
 
   init();
 });

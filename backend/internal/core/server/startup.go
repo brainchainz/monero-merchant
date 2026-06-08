@@ -117,12 +117,12 @@ func (s *Server) openWallet(parentCtx context.Context) error {
 	ctx, cancel := context.WithTimeout(parentCtx, 10*time.Second)
 	defer cancel()
 
-	type params struct {
+	type openParams struct {
 		Filename string `json:"filename"`
 		Password string `json:"password,omitempty"`
 	}
 
-	req := params{Filename: s.config.WalletName}
+	req := openParams{Filename: s.config.WalletName}
 	if s.config.WalletPassword != "" {
 		req.Password = s.config.WalletPassword
 	}
@@ -132,7 +132,21 @@ func (s *Server) openWallet(parentCtx context.Context) error {
 		if isWalletNotOpenErr(err) {
 			createCtx, createCancel := context.WithTimeout(parentCtx, 15*time.Second)
 			defer createCancel()
-			if createErr := s.walletRPC.Call(createCtx, "create_wallet", req, nil); createErr != nil {
+
+			type createParams struct {
+				Filename string `json:"filename"`
+				Password string `json:"password,omitempty"`
+				Language string `json:"language"`
+			}
+			createReq := createParams{
+				Filename: s.config.WalletName,
+				Language: "English",
+			}
+			if s.config.WalletPassword != "" {
+				createReq.Password = s.config.WalletPassword
+			}
+
+			if createErr := s.walletRPC.Call(createCtx, "create_wallet", createReq, nil); createErr != nil {
 				return fmt.Errorf("failed to create wallet: %w", createErr)
 			}
 			log.Printf("Wallet %q created successfully", s.config.WalletName)
@@ -237,5 +251,8 @@ func isWalletNotOpenErr(err error) bool {
 		strings.Contains(msg, "wallet does not exist") ||
 		strings.Contains(msg, "wallet open") ||
 		strings.Contains(msg, "failed to open wallet") ||
-		strings.Contains(msg, "file not found")
+		strings.Contains(msg, "file not found") ||
+		strings.Contains(msg, "not available") ||
+		strings.Contains(msg, "cannot be opened") ||
+		strings.Contains(msg, "doesn't exist")
 }

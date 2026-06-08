@@ -359,19 +359,107 @@ func (h *AdminHandler) GetConnectionInfo(w http.ResponseWriter, r *http.Request)
 	}
 
 	resp := map[string]interface{}{
-		"backend_url":   "/", // relative; POS clients should use same origin
-		"api_version":   "v2.1.0",
-		"admin_token":   currentToken,
+		"backend_url":  "/", // relative; POS clients should use same origin
+		"api_version":  "v2.1.0",
+		"admin_token":  currentToken,
 		"endpoints": map[string]string{
-			"login":       "/auth/login-admin",
-			"vendors":     "/admin/vendors",
+			"login":        "/auth/login-admin",
+			"vendors":      "/admin/vendors",
 			"transactions": "/admin/transactions",
-			"invites":     "/admin/invites",
-			"balance":     "/admin/balance",
-			"transfer":    "/admin/transfer-balance",
+			"invites":      "/admin/invites",
+			"balance":      "/admin/balance",
+			"transfer":     "/admin/transfer-balance",
 		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(resp)
+}
+
+// SetupWallet creates a new wallet file via wallet-rpc.
+func (h *AdminHandler) SetupWallet(w http.ResponseWriter, r *http.Request) {
+	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
+	if !ok || role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if h.vendorService == nil {
+		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	r = r.WithContext(ctx)
+
+	if httpErr := h.vendorService.SetupWallet(ctx); httpErr != nil {
+		http.Error(w, httpErr.Message, httpErr.Code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "Wallet created successfully"})
+}
+
+// RestoreWallet restores a wallet from mnemonic seed.
+func (h *AdminHandler) RestoreWallet(w http.ResponseWriter, r *http.Request) {
+	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
+	if !ok || role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if h.vendorService == nil {
+		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
+	defer cancel()
+	r = r.WithContext(ctx)
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	var req struct {
+		Seed          string `json:"seed"`
+		RestoreHeight uint64 `json:"restore_height"`
+	}
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if httpErr := h.vendorService.RestoreWallet(ctx, req.Seed, req.RestoreHeight); httpErr != nil {
+		http.Error(w, httpErr.Message, httpErr.Code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "message": "Wallet restored successfully"})
+}
+
+// GetWalletSeed returns the mnemonic seed of the currently open wallet.
+func (h *AdminHandler) GetWalletSeed(w http.ResponseWriter, r *http.Request) {
+	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
+	if !ok || role != "admin" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if h.vendorService == nil {
+		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	r = r.WithContext(ctx)
+
+	seed, httpErr := h.vendorService.GetWalletSeed(ctx)
+	if httpErr != nil {
+		http.Error(w, httpErr.Message, httpErr.Code)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"seed": seed})
 }

@@ -564,10 +564,143 @@ func (s *VendorService) GetWalletInfo(ctx context.Context) (map[string]interface
 	}
 
 	return map[string]interface{}{
-		"address": addrResp.Address,
+		"address":     addrResp.Address,
 		"wallet_name": s.config.WalletName,
-		"network": netResp.Nettype,
+		"network":     netResp.Nettype,
 	}, nil
+}
+
+// SetupWallet creates a new wallet file via wallet-rpc.
+func (s *VendorService) SetupWallet(ctx context.Context) *models.HTTPError {
+	if s.rpcClient == nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "wallet RPC client not configured")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// If wallet is already open, just return success
+	var addrResp struct {
+		Address string `json:"address"`
+	}
+	if err := s.rpcClient.Call(ctx, "get_address", map[string]any{"account_index": 0}, &addrResp); err == nil && addrResp.Address != "" {
+		return nil
+	}
+
+	// Close any currently open wallet first
+	_ = s.rpcClient.Call(ctx, "close_wallet", nil, nil)
+
+	type createParams struct {
+		Filename string `json:"filename"`
+		Password string `json:"password,omitempty"`
+		Language string `json:"language"`
+	}
+	req := createParams{
+		Filename: s.config.WalletName,
+		Language: "English",
+	}
+	if s.config.WalletPassword != "" {
+		req.Password = s.config.WalletPassword
+	}
+
+	createCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	if err := s.rpcClient.Call(createCtx, "create_wallet", req, nil); err != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to create wallet: "+err.Error())
+	}
+
+	// Open the newly created wallet
+	openCtx, cancel2 := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel2()
+	type openParams struct {
+		Filename string `json:"filename"`
+		Password string `json:"password,omitempty"`
+	}
+	openReq := openParams{Filename: s.config.WalletName}
+	if s.config.WalletPassword != "" {
+		openReq.Password = s.config.WalletPassword
+	}
+	if err := s.rpcClient.Call(openCtx, "open_wallet", openReq, nil); err != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to open created wallet: "+err.Error())
+	}
+
+	return nil
+}
+
+// RestoreWallet restores a wallet from mnemonic seed via wallet-rpc.
+func (s *VendorService) RestoreWallet(ctx context.Context, seed string, restoreHeight uint64) *models.HTTPError {
+	if s.rpcClient == nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "wallet RPC client not configured")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	seed = strings.TrimSpace(seed)
+	if seed == "" {
+		return models.NewHTTPError(http.StatusBadRequest, "mnemonic seed is required")
+	}
+
+	// Close any currently open wallet first
+	_ = s.rpcClient.Call(ctx, "close_wallet", nil, nil)
+
+	type restoreParams struct {
+		Filename       string `json:"filename"`
+		Password       string `json:"password,omitempty"`
+		Seed           string `json:"seed"`
+		SeedOffset     string `json:"seed_offset,omitempty"`
+		RestoreHeight  uint64 `json:"restore_height,omitempty"`
+		Language       string `json:"language"`
+	}
+	req := restoreParams{
+		Filename:      s.config.WalletName,
+		Seed:          seed,
+		RestoreHeight: restoreHeight,
+		Language:      "English",
+	}
+	if s.config.WalletPassword != "" {
+		req.Password = s.config.WalletPassword
+	}
+
+	restoreCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+	if err := s.rpcClient.Call(restoreCtx, "restore_deterministic_wallet", req, nil); err != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to restore wallet: "+err.Error())
+	}
+
+	// Open the restored wallet
+	openCtx, cancel2 := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel2()
+	type openParams struct {
+		Filename string `json:"filename"`
+		Password string `json:"password,omitempty"`
+	}
+	openReq := openParams{Filename: s.config.WalletName}
+	if s.config.WalletPassword != "" {
+		openReq.Password = s.config.WalletPassword
+	}
+	if err := s.rpcClient.Call(openCtx, "open_wallet", openReq, nil); err != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to open restored wallet: "+err.Error())
+	}
+
+	return nil
+}
+
+// GetWalletSeed returns the mnemonic seed for the currently open wallet.
+func (s *VendorService) GetWalletSeed(ctx context.Context) (string, *models.HTTPError) {
+	if s.rpcClient == nil {
+		return "", models.NewHTTPError(http.StatusInternalServerError, "wallet RPC client not configured")
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var resp struct {
+		Key string `json:"key"`
+	}
+	if err := s.rpcClient.Call(ctx, "query_key", map[string]any{"key_type": "mnemonic"}, &resp); err != nil {
+		return "", models.NewHTTPError(http.StatusInternalServerError, "failed to retrieve seed: "+err.Error())
+	}
+	return resp.Key, nil
 }
 
 func (s *VendorService) CreateTransfer(ctx context.Context, vendorID uint) *models.HTTPError {

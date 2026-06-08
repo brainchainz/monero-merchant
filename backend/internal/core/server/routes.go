@@ -161,6 +161,9 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, walletRPC, 
 		r.Get("/admin/pos-devices", adminHandler.ListPosDevices)
 		r.Get("/admin/wallet-info", adminHandler.GetWalletInfo)
 		r.Get("/admin/connection-info", adminHandler.GetConnectionInfo)
+		r.Post("/admin/setup-wallet", adminHandler.SetupWallet)
+		r.Post("/admin/restore-wallet", adminHandler.RestoreWallet)
+		r.Get("/admin/wallet-seed", adminHandler.GetWalletSeed)
 
 		// Vendor routes
 		r.Post("/vendor/delete", vendorHandler.DeleteVendor)
