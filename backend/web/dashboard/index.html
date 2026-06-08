@@ -247,7 +247,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><h3 class="card-title"><span class="dot"></span>Create Invite</h3></div>
         <div class="form">
-          <div class="field"><label>Valid Until (Unix timestamp)</label><input type="number" id="inviteValid" placeholder="e.g. 1792504734"></div>
+          <div class="field"><label>Valid Until</label><input type="datetime-local" id="inviteValid"></div>
           <div class="field"><label>Forced Vendor Name (optional)</label><input type="text" id="inviteForced" placeholder="Leave blank for any name"></div>
           <button class="btn-submit" id="inviteBtn">Create</button>
         </div>
@@ -304,7 +304,7 @@ async function init(){
       if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
     }catch(e){}
   }
-  const y=Math.floor(Date.now()/1000)+31536000; if($('inviteValid')) $('inviteValid').value=y;
+  const d=new Date();d.setDate(d.getDate()+365);if($('inviteValid'))$('inviteValid').value=d.toISOString().slice(0,16);
 }
 
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
@@ -462,8 +462,11 @@ function renderInvites(){
 function updateStats(){}
 
 async function createInvite(){
-  const vu=parseInt($('inviteValid').value),fn=$('inviteForced').value.trim()||null;
-  if(!vu||isNaN(vu)){toast('Invalid timestamp','err');return;}
+  const dt=$('inviteValid').value;
+  if(!dt){toast('Please select a valid until date','err');return;}
+  const vu=Math.floor(new Date(dt).getTime()/1000);
+  if(isNaN(vu)||vu<=Math.floor(Date.now()/1000)){toast('Date must be in the future','err');return;}
+  const fn=$('inviteForced').value.trim()||null;
   $('inviteBtn').disabled=true;
   try{const r=await api('POST','/admin/invite',{valid_until:vu,forced_name:fn});const d=await r.json().catch(()=>({}));
     if(!r.ok){toast(d.error||'Failed','err');return;}
