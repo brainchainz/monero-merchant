@@ -380,11 +380,15 @@ func (h *AdminHandler) GetConnectionInfo(w http.ResponseWriter, r *http.Request)
 func (h *AdminHandler) SetupWallet(w http.ResponseWriter, r *http.Request) {
 	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
 	if !ok || role != "admin" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Unauthorized"})
 		return
 	}
 	if h.vendorService == nil {
-		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Vendor service not configured"})
 		return
 	}
 
@@ -393,7 +397,9 @@ func (h *AdminHandler) SetupWallet(w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	if httpErr := h.vendorService.SetupWallet(ctx); httpErr != nil {
-		http.Error(w, httpErr.Message, httpErr.Code)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpErr.Code)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": httpErr.Message})
 		return
 	}
 
@@ -405,11 +411,15 @@ func (h *AdminHandler) SetupWallet(w http.ResponseWriter, r *http.Request) {
 func (h *AdminHandler) RestoreWallet(w http.ResponseWriter, r *http.Request) {
 	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
 	if !ok || role != "admin" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Unauthorized"})
 		return
 	}
 	if h.vendorService == nil {
-		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Vendor service not configured"})
 		return
 	}
 
@@ -425,12 +435,16 @@ func (h *AdminHandler) RestoreWallet(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Invalid request body"})
 		return
 	}
 
 	if httpErr := h.vendorService.RestoreWallet(ctx, req.Seed, req.RestoreHeight); httpErr != nil {
-		http.Error(w, httpErr.Message, httpErr.Code)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpErr.Code)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": httpErr.Message})
 		return
 	}
 
@@ -442,11 +456,15 @@ func (h *AdminHandler) RestoreWallet(w http.ResponseWriter, r *http.Request) {
 func (h *AdminHandler) GetWalletSeed(w http.ResponseWriter, r *http.Request) {
 	role, ok := utils.GetClaimFromContext(r.Context(), models.ClaimsRoleKey)
 	if !ok || role != "admin" {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Unauthorized"})
 		return
 	}
 	if h.vendorService == nil {
-		http.Error(w, "Vendor service not configured", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": "Vendor service not configured"})
 		return
 	}
 
@@ -456,7 +474,9 @@ func (h *AdminHandler) GetWalletSeed(w http.ResponseWriter, r *http.Request) {
 
 	seed, httpErr := h.vendorService.GetWalletSeed(ctx)
 	if httpErr != nil {
-		http.Error(w, httpErr.Message, httpErr.Code)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(httpErr.Code)
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": httpErr.Message})
 		return
 	}
 

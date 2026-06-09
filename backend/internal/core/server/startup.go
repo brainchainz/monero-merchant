@@ -58,19 +58,32 @@ func (s *Server) ensureWalletReady(parentCtx context.Context) {
 		return
 	}
 
-	locked, unlocked, err := s.fetchWalletBalances(parentCtx)
-	if err != nil {
-		if isWalletNotOpenErr(err) {
-			if err := s.openWallet(parentCtx); err != nil {
-				log.Printf("Failed to open wallet %q: %v", s.config.WalletName, err)
-				return
-			}
-			locked, unlocked, err = s.fetchWalletBalances(parentCtx)
+	// Retry with backoff — wallet-rpc may not be ready immediately on startup
+	var locked, unlocked uint64
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			log.Printf("Retrying wallet open (attempt %d/3) after 5s...", attempt+1)
+			time.Sleep(5 * time.Second)
 		}
+		locked, unlocked, err = s.fetchWalletBalances(parentCtx)
+		if err != nil {
+			if isWalletNotOpenErr(err) {
+				if openErr := s.openWallet(parentCtx); openErr != nil {
+					log.Printf("Failed to open wallet %q: %v", s.config.WalletName, openErr)
+					continue
+				}
+				locked, unlocked, err = s.fetchWalletBalances(parentCtx)
+			}
+		}
+		if err == nil {
+			break
+		}
+		log.Printf("Wallet balance fetch error (attempt %d/3): %v", attempt+1, err)
 	}
 
 	if err != nil {
-		log.Printf("Failed to fetch wallet balances: %v", err)
+		log.Printf("Failed to fetch wallet balances after retries: %v", err)
 		return
 	}
 

@@ -587,7 +587,7 @@ func (s *VendorService) SetupWallet(ctx context.Context) *models.HTTPError {
 		return nil
 	}
 
-	// Close any currently open wallet first
+	// Close any currently open wallet first (ignore error if none open)
 	_ = s.rpcClient.Call(ctx, "close_wallet", nil, nil)
 
 	type createParams struct {
@@ -603,25 +603,47 @@ func (s *VendorService) SetupWallet(ctx context.Context) *models.HTTPError {
 		req.Password = s.config.WalletPassword
 	}
 
-	createCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
-	if err := s.rpcClient.Call(createCtx, "create_wallet", req, nil); err != nil {
-		return models.NewHTTPError(http.StatusInternalServerError, "failed to create wallet: "+err.Error())
+	// Retry create_wallet with backoff — wallet-rpc may need a moment
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			log.Printf("Retrying create_wallet (attempt %d/3) after 3s...", attempt+1)
+			time.Sleep(3 * time.Second)
+		}
+		createCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		lastErr = s.rpcClient.Call(createCtx, "create_wallet", req, nil)
+		cancel()
+		if lastErr == nil {
+			break
+		}
+	}
+	if lastErr != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to create wallet: "+lastErr.Error())
 	}
 
-	// Open the newly created wallet
-	openCtx, cancel2 := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel2()
-	type openParams struct {
-		Filename string `json:"filename"`
-		Password string `json:"password,omitempty"`
+	// Open the newly created wallet with retry
+	var openErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(2 * time.Second)
+		}
+		openCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		type openParams struct {
+			Filename string `json:"filename"`
+			Password string `json:"password,omitempty"`
+		}
+		openReq := openParams{Filename: s.config.WalletName}
+		if s.config.WalletPassword != "" {
+			openReq.Password = s.config.WalletPassword
+		}
+		openErr = s.rpcClient.Call(openCtx, "open_wallet", openReq, nil)
+		cancel()
+		if openErr == nil {
+			break
+		}
 	}
-	openReq := openParams{Filename: s.config.WalletName}
-	if s.config.WalletPassword != "" {
-		openReq.Password = s.config.WalletPassword
-	}
-	if err := s.rpcClient.Call(openCtx, "open_wallet", openReq, nil); err != nil {
-		return models.NewHTTPError(http.StatusInternalServerError, "failed to open created wallet: "+err.Error())
+	if openErr != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to open created wallet: "+openErr.Error())
 	}
 
 	return nil
@@ -661,25 +683,47 @@ func (s *VendorService) RestoreWallet(ctx context.Context, seed string, restoreH
 		req.Password = s.config.WalletPassword
 	}
 
-	restoreCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-	defer cancel()
-	if err := s.rpcClient.Call(restoreCtx, "restore_deterministic_wallet", req, nil); err != nil {
-		return models.NewHTTPError(http.StatusInternalServerError, "failed to restore wallet: "+err.Error())
+	// Retry restore with backoff
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			log.Printf("Retrying restore_deterministic_wallet (attempt %d/3) after 5s...", attempt+1)
+			time.Sleep(5 * time.Second)
+		}
+		restoreCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		lastErr = s.rpcClient.Call(restoreCtx, "restore_deterministic_wallet", req, nil)
+		cancel()
+		if lastErr == nil {
+			break
+		}
+	}
+	if lastErr != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to restore wallet: "+lastErr.Error())
 	}
 
-	// Open the restored wallet
-	openCtx, cancel2 := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel2()
-	type openParams struct {
-		Filename string `json:"filename"`
-		Password string `json:"password,omitempty"`
+	// Open the restored wallet with retry
+	var openErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			time.Sleep(2 * time.Second)
+		}
+		openCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		type openParams struct {
+			Filename string `json:"filename"`
+			Password string `json:"password,omitempty"`
+		}
+		openReq := openParams{Filename: s.config.WalletName}
+		if s.config.WalletPassword != "" {
+			openReq.Password = s.config.WalletPassword
+		}
+		openErr = s.rpcClient.Call(openCtx, "open_wallet", openReq, nil)
+		cancel()
+		if openErr == nil {
+			break
+		}
 	}
-	openReq := openParams{Filename: s.config.WalletName}
-	if s.config.WalletPassword != "" {
-		openReq.Password = s.config.WalletPassword
-	}
-	if err := s.rpcClient.Call(openCtx, "open_wallet", openReq, nil); err != nil {
-		return models.NewHTTPError(http.StatusInternalServerError, "failed to open restored wallet: "+err.Error())
+	if openErr != nil {
+		return models.NewHTTPError(http.StatusInternalServerError, "failed to open restored wallet: "+openErr.Error())
 	}
 
 	return nil

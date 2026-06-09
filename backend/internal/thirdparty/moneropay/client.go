@@ -27,9 +27,9 @@ func NewMoneroPayAPIClient() *MoneroPayAPIClient {
 
 	// Read the base URL from environment variables
 	baseURL := os.Getenv("MONEROPAY_BASE_URL")
-	if baseURL == "" {
-		log.Println("MONEROPAY_BASE_URL not set, using default")
-		baseURL = "http://host.docker.internal:5000"
+	if baseURL == "" || strings.Contains(baseURL, ":8080") {
+		// Auto-correct old installs that had the wrong port baked into .env
+		baseURL = "http://moneropay:5000"
 	}
 
 	return &MoneroPayAPIClient{BaseURL: baseURL}
