@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>XMRpos Vendor Dashboard</title>
+  <title>Monero Merchant Vendor Portal</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     :root {
@@ -382,7 +382,10 @@
     .status-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px}
     .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
     .login-box,.modal{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0) 140px),var(--bg-secondary)!important;border:1px solid var(--border)!important;box-shadow:var(--elev-lg);border-radius:24px!important}
-    .login-logo{background:var(--grad-accent)!important;border-radius:18px!important;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 12px 32px -6px rgba(255,106,43,.4)}
+    .login-logo{background:none!important;border-radius:18px!important;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 12px 32px -6px rgba(255,106,43,.4)}
+    .login-logo img{width:100%;height:100%;object-fit:cover;display:block}
+    .sidebar-header h1{display:flex;align-items:center;gap:8px}
+    .sidebar-header .logo-img{width:26px;height:26px;border-radius:7px;object-fit:cover}
 
     /* Connect-your-till panel (shown after creating a POS device) */
     .connect-till{position:relative;background:linear-gradient(135deg,rgba(22,216,168,.10),rgba(22,216,168,.02)),var(--bg-secondary);border:1px solid rgba(22,216,168,.22);border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:var(--elev)}
@@ -401,9 +404,9 @@
 <div id="login-screen" class="login-container">
   <div class="login-box">
     <div class="login-header">
-      <div class="login-logo">XMR</div>
+      <div class="login-logo"><img src="/dashboard/logo.png" alt="Monero Merchant"></div>
       <h1 class="login-title">Vendor Dashboard</h1>
-      <p class="login-subtitle">Sign in to manage your XMRpos account</p>
+      <p class="login-subtitle">Sign in to manage your store</p>
     </div>
     <div id="login-error" class="login-error"></div>
     <form id="login-form">
@@ -431,7 +434,7 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h1><span class="logo">XMR</span> Vendor</h1>
+      <h1><img src="/dashboard/logo.png" class="logo-img" alt=""> Vendor</h1>
     </div>
     <nav class="nav">
       <div class="nav-item active" data-page="dashboard">
@@ -540,6 +543,20 @@
 // ============ Configuration ============
 const API_BASE = '';
 
+// ============ Clipboard (works over plain http where navigator.clipboard is unavailable) ============
+function clipCopy(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text); return true; }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
+  } catch (e) { return false; }
+}
+
 // ============ Security: HTML Escaping ============
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
@@ -621,7 +638,7 @@ async function refreshAccessToken() {
 // user stays logged in across reloads (it gets exchanged for a new access
 // token on page load).
 function saveAuth() {
-  localStorage.setItem('xmrpos_auth', JSON.stringify({
+  localStorage.setItem('mm_vendor_auth', JSON.stringify({
     refreshToken: auth.refreshToken,
     vendorName: auth.vendorName,
     vendorId: auth.vendorId
@@ -629,7 +646,7 @@ function saveAuth() {
 }
 
 function loadAuth() {
-  const saved = localStorage.getItem('xmrpos_auth');
+  const saved = localStorage.getItem('mm_vendor_auth');
   if (!saved) return false;
   try {
     const data = JSON.parse(saved);
@@ -638,14 +655,14 @@ function loadAuth() {
     auth.vendorId = data.vendorId != null ? data.vendorId : null;
     return auth.refreshToken !== null;
   } catch (e) {
-    localStorage.removeItem('xmrpos_auth');
+    localStorage.removeItem('mm_vendor_auth');
     return false;
   }
 }
 
 function logout() {
   auth = { accessToken: null, refreshToken: null, vendorName: null, vendorId: null };
-  localStorage.removeItem('xmrpos_auth');
+  localStorage.removeItem('mm_vendor_auth');
   showLoginScreen();
 }
 
@@ -747,7 +764,7 @@ async function exportCSV() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'xmrpos-transactions-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.download = 'monero-merchant-transactions-' + new Date().toISOString().split('T')[0] + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1103,8 +1120,8 @@ async function renderPOS(container, headerActions) {
       '<div class="chint">🔒 The password is shown only now — copy it before leaving this page.</div>';
     container.appendChild(panel);
     panel.querySelectorAll('.ccopy').forEach(b => b.addEventListener('click', () => {
-      if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v);
-      b.textContent = 'Copied'; setTimeout(() => { b.innerHTML = '&#8455; Copy'; }, 1200);
+      const ok = clipCopy(b.dataset.v);
+      b.textContent = ok ? 'Copied' : 'Select manually'; setTimeout(() => { b.innerHTML = '&#8455; Copy'; }, 1400);
     }));
   }
 

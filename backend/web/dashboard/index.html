@@ -199,6 +199,8 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 .login-card .field input:focus,.form .field input:focus,.modal-card input:focus{box-shadow:0 0 0 4px rgba(255,106,43,.14)}
 
 .sync-bar{border-radius:13px;box-shadow:var(--elev)}
+.top-nav .nav-actions .btn-vendor{background:rgba(255,106,43,.12);color:var(--accent);border:1px solid rgba(255,106,43,.28);text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:10px}
+.top-nav .nav-actions .btn-vendor:hover{background:rgba(255,106,43,.2)}
 </style>
 </head>
 <body>
@@ -238,7 +240,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
     </div>
   <div style="display:flex;align-items:center;gap:16px">
     <div class="live-pill" id="statusPill"><span class="dot" id="statusDot"></span><span class="val" id="statusText">Checking...</span></div>
-    <div class="nav-actions"><button class="btn-sm btn-logout" id="logoutBtn">Logout</button></div>
+    <div class="nav-actions"><a href="/store" target="_blank" rel="noopener" class="btn-sm btn-vendor" id="vendorPortalLink">Vendor Portal ↗</a><button class="btn-sm btn-logout" id="logoutBtn">Logout</button></div>
   </div>
 </nav>
 
@@ -482,7 +484,20 @@ function esc(s){if(s==null)return'';return String(s).replace(/[&<>"']/g,c=>({'&'
 function fmtXMR(a){if(a==null)return'--';return(a/ATOMIC).toFixed(6)+' XMR';}
 function fmtDate(s){if(!s)return'-';const d=new Date(s);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 function toast(msg,ok){const e=document.createElement('div');e.className='toast '+(ok?'ok':'err');const icon=document.createElement('div');icon.className='t-icon';icon.textContent=ok?'OK':'!';e.appendChild(icon);const span=document.createElement('span');span.textContent=msg;e.appendChild(span);$('toastWrap').appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transform='translateX(20px)';setTimeout(()=>e.remove(),300)},3500);}
-function copy(t){navigator.clipboard?.writeText(t);toast('Copied','ok');}
+function legacyCopy(t){
+  try{
+    const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');
+    ta.style.position='fixed';ta.style.top='-1000px';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand('copy');document.body.removeChild(ta);
+    toast(ok?'Copied':'Copy failed (select manually)',ok?'ok':'err');
+  }catch(e){toast('Copy failed (select manually)','err');}
+}
+function copy(t){
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(t).then(()=>toast('Copied','ok')).catch(()=>legacyCopy(t));
+  }else{legacyCopy(t);}
+}
 
 async function loadAll(){await Promise.all([fetchHealth(),fetchVendors(),fetchTx(),fetchPos(),fetchInvites(),fetchDaemonStatus(),fetchBalance(),fetchWalletInfo(),fetchConnectionInfo()]);}
 async function fetchHealth(){
