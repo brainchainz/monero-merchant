@@ -8,10 +8,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08080a;--surface:#0f0f12;--surface-raised:#16161b;--surface-glass:rgba(22,22,27,.6);
-  --ink:#fafafa;--ink-dim:#8a8a9e;--ink-faint:#4a4a5e;
-  --accent:#ff6b35;--accent-glow:rgba(255,107,53,.3);--accent2:#00d4aa;--accent2-glow:rgba(0,212,170,.25);
-  --warn:#ffc107;--danger:#ff4d4d;--font-ui:'Instrument Sans',system-ui,sans-serif;--font-mono:'IBM Plex Mono',monospace;
+  --bg:#070709;--bg2:#0b0b0f;--surface:#101015;--surface-2:#15151c;--surface-raised:#1a1a22;--surface-glass:rgba(20,20,27,.55);
+  --ink:#f6f5fa;--ink-dim:#9b97ad;--ink-faint:#605c75;
+  --accent:#ff6a2b;--accent-2:#ff9b45;--accent-glow:rgba(255,106,43,.35);--accent2:#16d8a8;--accent2-glow:rgba(22,216,168,.25);
+  --warn:#ffc23d;--danger:#ff5d5d;--blue:#7aa2f7;
+  --line:rgba(255,255,255,.07);--line-soft:rgba(255,255,255,.045);
+  --grad-accent:linear-gradient(135deg,var(--accent),var(--accent-2));
+  --elev:0 1px 0 rgba(255,255,255,.05) inset,0 12px 30px -16px rgba(0,0,0,.7);
+  --elev-lg:0 1px 0 rgba(255,255,255,.06) inset,0 30px 60px -24px rgba(0,0,0,.8);
+  --font-ui:'Instrument Sans',system-ui,sans-serif;--font-mono:'IBM Plex Mono',monospace;
 }
 html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(--ink);overflow:hidden}
 
@@ -151,6 +156,49 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 .sync-bar.syncing .sync-dot{background:var(--warn);box-shadow:0 0 8px rgba(255,193,7,.3);animation:livePulse 1s infinite}
 .sync-bar.offline .sync-dot{background:var(--danger)}
 .sync-bar strong{color:var(--ink);font-weight:600}
+
+/* ── umbrel34 visual refresh (depth + polish) ───────────────────────── */
+#ambient{background:
+  radial-gradient(900px 480px at 16% -6%,rgba(255,106,43,.10),transparent 60%),
+  radial-gradient(700px 420px at 92% 8%,rgba(22,216,168,.05),transparent 60%),
+  radial-gradient(1200px 800px at 50% 120%,rgba(0,0,0,.6),transparent 70%),var(--bg)}
+#ambient::after{content:"";position:absolute;inset:0;opacity:.5;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.025) 1px,transparent 1px);background-size:24px 24px;-webkit-mask:radial-gradient(1000px 600px at 30% 0%,#000,transparent 75%);mask:radial-gradient(1000px 600px at 30% 0%,#000,transparent 75%)}
+
+.top-nav{background:linear-gradient(180deg,rgba(7,7,9,.92),rgba(7,7,9,.55) 70%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft)}
+.top-nav .brand-mark{width:32px;height:32px;box-shadow:0 0 0 1px rgba(255,255,255,.1) inset,0 6px 18px -5px var(--accent-glow)}
+.top-nav .brand-name span{background:var(--grad-accent);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.top-nav .live-pill{border-radius:999px;background:var(--surface-2);box-shadow:var(--elev)}
+
+.sidebar{background:linear-gradient(180deg,var(--bg2),var(--bg));padding:18px 14px}
+.sidebar .nav-item{border-radius:11px;border-left:none;font-weight:500;position:relative}
+.sidebar .nav-item.active{background:linear-gradient(135deg,rgba(255,106,43,.18),rgba(255,106,43,.05));box-shadow:0 0 0 1px rgba(255,106,43,.22) inset;border-left:none}
+.sidebar .nav-item.active::before{content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:3px;height:20px;border-radius:0 3px 3px 0;background:var(--grad-accent);box-shadow:0 0 12px var(--accent-glow)}
+.sidebar .nav-item.active svg{color:var(--accent)}
+
+.section-title{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 120px),var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--elev)}
+.card .card-title .dot{border-radius:2px;background:var(--grad-accent);box-shadow:0 0 8px var(--accent-glow)}
+
+.stat-card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),var(--surface);border:1px solid var(--line);box-shadow:var(--elev);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--elev-lg)}
+.stat-card .stat-value.xmr{background:var(--grad-accent);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.stat-card.feature{background:linear-gradient(135deg,rgba(255,106,43,.14),rgba(255,106,43,.02)),var(--surface)}
+.stat-card.feature::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--accent-glow),transparent 65%)}
+
+.glass-strip{border-radius:16px;border:1px solid var(--line);box-shadow:var(--elev)}
+
+.data-table .badge{display:inline-flex;align-items:center;gap:6px}
+.data-table .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
+
+.btn-fill,.form .btn-submit,.login-card .btn-login,.form .btn-submit:hover{background:var(--grad-accent);box-shadow:0 8px 22px -8px var(--accent-glow)}
+.btn-fill:hover,.form .btn-submit:hover,.login-card .btn-login:hover{filter:brightness(1.06);transform:translateY(-1px)}
+
+.login-bg{background:radial-gradient(800px 500px at 50% -10%,rgba(255,106,43,.12),transparent 60%),var(--bg)}
+.login-card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0) 140px),var(--surface);border:1px solid var(--line);box-shadow:var(--elev-lg);border-radius:26px}
+.login-card .login-brand{width:60px;height:60px;border-radius:18px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 12px 32px -6px var(--accent-glow)}
+.login-card .field input:focus,.form .field input:focus,.modal-card input:focus{box-shadow:0 0 0 4px rgba(255,106,43,.14)}
+
+.sync-bar{border-radius:13px;box-shadow:var(--elev)}
 </style>
 </head>
 <body>
@@ -164,6 +212,20 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
     <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="set your password" autocomplete="current-password"></div>
     <button class="btn-login" id="loginBtn">Sign In</button>
     <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="login-bg hidden" id="setupBg">
+  <div class="login-card">
+    <img class="login-brand" src="/dashboard/logo.png" alt="Monero Merchant">
+    <h2>Set up your dashboard</h2>
+    <p>Choose an admin password to protect your store.</p>
+    <div class="field"><label>Admin Password</label><input type="password" id="setupPass" autocomplete="new-password" placeholder="At least 6 characters"></div>
+    <div class="field"><label>Confirm Password</label><input type="password" id="setupConfirm" autocomplete="new-password"></div>
+    <button class="btn-login" id="setupBtn">Create Dashboard</button>
+    <button class="btn-login" id="setupSkipBtn" style="background:var(--surface-2);color:var(--ink-dim);box-shadow:none;border:1px solid var(--line);margin-top:10px">Skip — set it later</button>
+    <div class="login-error" id="setupError"></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:14px;margin-bottom:0">Skipping keeps the dashboard open on your home network until you set one.</p>
   </div>
 </div>
 
@@ -234,7 +296,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
 
     <div class="section" id="sec-dashboard">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Wallet Total</div><div class="stat-value xmr" id="dashTotal">-- XMR</div></div>
+        <div class="stat-card feature"><div class="stat-label">Wallet Total</div><div class="stat-value xmr" id="dashTotal">-- XMR</div></div>
         <div class="stat-card"><div class="stat-label">Unlocked</div><div class="stat-value" id="dashUnlocked">-- XMR</div></div>
         <div class="stat-card"><div class="stat-label">Vendors</div><div class="stat-value" id="dashVendors">--</div></div>
         <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value" id="dashTx">--</div></div>
@@ -285,7 +347,7 @@ html,body{height:100%;font-family:var(--font-ui);background:var(--bg);color:var(
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><h3 class="card-title"><span class="dot"></span>Create Invite</h3></div>
         <div class="form">
-          <div class="field"><label>Valid Until</label><input type="datetime-local" id="inviteValid"></div>
+          <div class="field"><label>Valid for</label><select id="inviteValidDays"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="365">1 year</option></select></div>
           <div class="field"><label>Forced Vendor Name (optional)</label><input type="text" id="inviteForced" placeholder="Leave blank for any name"></div>
           <button class="btn-submit" id="inviteBtn">Create</button>
         </div>
@@ -341,14 +403,43 @@ async function init(){
   const s=localStorage.getItem('mm_tokens');
   if(s){try{tokens=JSON.parse(s);if(tokens.access){showApp();loadAll();updateSettingsUI();return;}}catch(e){}}
 
+  // First run (no admin password set): show the setup screen instead of the login form
   if(!passwordSet){
-    try{
-      const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
-      const ld=await lr.json().catch(()=>({}));
-      if(lr.ok){tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();showApp();loadAll();updateSettingsUI();return;}
-    }catch(e){}
+    $('loginBg').classList.add('hidden');
+    $('setupBg').classList.remove('hidden');
   }
-  const d=new Date();d.setDate(d.getDate()+365);if($('inviteValid'))$('inviteValid').value=d.toISOString().slice(0,16);
+}
+
+async function doSetupCreate(){
+  const p=$('setupPass').value,c=$('setupConfirm').value;
+  $('setupError').textContent='';
+  if(p.length<6){$('setupError').textContent='At least 6 characters';return;}
+  if(p!==c){$('setupError').textContent='Passwords do not match';return;}
+  $('setupBtn').disabled=true;
+  try{
+    const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
+    const ld=await lr.json().catch(()=>({}));
+    if(!lr.ok){$('setupError').textContent=ld.error||'Setup failed';return;}
+    tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;
+    const ur=await api('POST','/auth/update-password',{current_password:'',new_password:p});
+    const ud=await ur.json().catch(()=>({}));
+    if(!ur.ok){$('setupError').textContent=ud.error||'Could not set password';return;}
+    tokens.access=ud.access_token;tokens.refresh=ud.refresh_token;saveTokens();
+    passwordSet=true;updateSettingsUI();showApp();loadAll();
+  }catch(e){$('setupError').textContent='Network error';}
+  finally{$('setupBtn').disabled=false;}
+}
+
+async function doSetupSkip(){
+  $('setupSkipBtn').disabled=true;
+  try{
+    const lr=await fetch('/auth/login-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'admin',password:''})});
+    const ld=await lr.json().catch(()=>({}));
+    if(!lr.ok){$('setupError').textContent=ld.error||'Failed';return;}
+    tokens.access=ld.access_token;tokens.refresh=ld.refresh_token;saveTokens();
+    passwordSet=false;updateSettingsUI();showApp();loadAll();
+  }catch(e){$('setupError').textContent='Network error';}
+  finally{$('setupSkipBtn').disabled=false;}
 }
 
 function saveTokens(){localStorage.setItem('mm_tokens',JSON.stringify(tokens));}
@@ -366,7 +457,7 @@ async function doLogin(){
   }finally{$('loginBtn').disabled=false;}
 }
 function doLogout(){clearTokens();$('loginBg').classList.remove('hidden');$('topNav').style.display='none';$('appScreen').style.display='none';$('loginPass').value='';}
-function showApp(){$('loginBg').classList.add('hidden');$('topNav').style.display='flex';$('appScreen').style.display='flex';}
+function showApp(){$('loginBg').classList.add('hidden');var sb=$('setupBg');if(sb)sb.classList.add('hidden');$('topNav').style.display='flex';$('appScreen').style.display='flex';}
 
 function updateSettingsUI(){
   const pw=$('pwdCurrentWrap'),tl=$('pwdTitle'),nl=$('pwdNewLabel');
@@ -612,10 +703,8 @@ function renderInvites(){
 function updateStats(){}
 
 async function createInvite(){
-  const dt=$('inviteValid').value;
-  if(!dt){toast('Please select a valid until date','err');return;}
-  const vu=Math.floor(new Date(dt).getTime()/1000);
-  if(isNaN(vu)||vu<=Math.floor(Date.now()/1000)){toast('Date must be in the future','err');return;}
+  const days=parseInt($('inviteValidDays').value)||30;
+  const vu=Math.floor(Date.now()/1000)+days*86400;
   const fn=$('inviteForced').value.trim()||null;
   $('inviteBtn').disabled=true;
   try{const r=await api('POST','/admin/invite',{valid_until:vu,forced_name:fn});const d=await r.json().catch(()=>({}));
@@ -675,6 +764,9 @@ function navTo(page){
 document.addEventListener('DOMContentLoaded',function(){
   $('loginBtn').addEventListener('click',doLogin);
   $('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  $('setupBtn').addEventListener('click',doSetupCreate);
+  $('setupSkipBtn').addEventListener('click',doSetupSkip);
+  $('setupConfirm').addEventListener('keydown',function(e){if(e.key==='Enter')doSetupCreate();});
   $('logoutBtn').addEventListener('click',doLogout);
   document.querySelectorAll('.nav-item[data-nav]').forEach(el=>{
     el.addEventListener('click',function(){navTo(this.dataset.nav);});

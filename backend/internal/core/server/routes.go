@@ -82,6 +82,10 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, walletRPC, 
 	r.Get("/dashboard", serveDashboard)
 	r.Get("/dashboard/*", serveDashboard)
 
+	// Vendor self-service portal (signup, POS devices, payouts)
+	r.Get("/store", serveStore)
+	r.Get("/store/*", serveStore)
+
 	// Public routes
 	r.Group(func(r chi.Router) {
 		// Auth routes
@@ -184,6 +188,20 @@ func NewRouter(ctx context.Context, cfg *config.Config, db *gorm.DB, walletRPC, 
 	})
 
 	return r
+}
+
+// serveStore serves the vendor self-service portal (single-page app).
+func serveStore(w http.ResponseWriter, r *http.Request) {
+	dir := os.Getenv("DASHBOARD_DIR")
+	if dir == "" {
+		dir = "./web/dashboard"
+	}
+	storePath := filepath.Join(dir, "store.html")
+	if _, err := os.Stat(storePath); os.IsNotExist(err) {
+		http.Error(w, "Vendor portal not found", http.StatusNotFound)
+		return
+	}
+	http.ServeFile(w, r, storePath)
 }
 
 // serveDashboard serves the embedded admin dashboard SPA.
