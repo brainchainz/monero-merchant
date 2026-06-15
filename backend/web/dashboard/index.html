@@ -670,8 +670,9 @@ function renderVendors(){
   const c=dataCache.vendors;
   if(!c.length){$('vendorsWrap').innerHTML='<div class="empty-state"><div>No vendors registered yet</div><div style="font-size:12px;margin-top:8px">Create an invite to add vendors</div></div>';return;}
   let h='<table class="data-table"><thead><tr><th>Name</th><th>Subaddress</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
-  c.forEach(v=>{const bal=(v.balance/ATOMIC).toFixed(6);const addr=v.monero_subaddress?v.monero_subaddress.substring(0,10)+'...':'--';
-    h+='<tr><td><strong>'+esc(v.name)+'</strong></td><td class="mono" title="'+esc(v.monero_subaddress)+'">'+esc(addr)+'</td><td class="mono">'+bal+' XMR</td><td class="actions"><button class="btn-send" data-action="xfer" data-id="'+v.id+'" data-name="'+esc(v.name)+'">Transfer</button><button class="btn-del" data-action="del" data-id="'+v.id+'" data-name="'+esc(v.name)+'">Delete</button></td></tr>';
+  c.forEach(v=>{const balRaw=v.balance||0;const bal=(balRaw/ATOMIC).toFixed(6);const addr=v.monero_subaddress?v.monero_subaddress.substring(0,10)+'...':'--';
+    const xferBtn=balRaw>0?'<button class="btn-send" data-action="xfer" data-id="'+v.id+'" data-name="'+esc(v.name)+'">Transfer</button>':'<button class="btn-send" disabled title="No balance to transfer" style="opacity:.4;cursor:not-allowed">Transfer</button>';
+    h+='<tr><td><strong>'+esc(v.name)+'</strong></td><td class="mono" title="'+esc(v.monero_subaddress)+'">'+esc(addr)+'</td><td class="mono">'+bal+' XMR</td><td class="actions">'+xferBtn+'<button class="btn-del" data-action="del" data-id="'+v.id+'" data-name="'+esc(v.name)+'">Delete</button></td></tr>';
   });
   h+='</tbody></table>';$('vendorsWrap').innerHTML=h;
   document.querySelectorAll('#vendorsWrap [data-action]').forEach(b=>{
@@ -729,17 +730,23 @@ async function createInvite(){
 }
 function openXfer(id,name){$('xferVendorId').value=id;$('xferVendorName').textContent=name;$('xferModal').classList.add('open');}
 function closeXfer(){$('xferModal').classList.remove('open');}
+async function readErr(r,fallback){
+  try{const ct=r.headers.get('content-type')||'';
+    if(ct.indexOf('json')>=0){const d=await r.json();return d.message||d.error||fallback;}
+    const t=(await r.text()).trim();return t||fallback;
+  }catch(e){return fallback;}
+}
 async function confirmXfer(){
   const id=parseInt($('xferVendorId').value);closeXfer();
-  try{const r=await api('POST','/admin/transfer-balance',{vendor_id:id});const d=await r.json().catch(()=>({}));
-    if(!r.ok){toast(d.error||'Transfer failed','err');return;}
+  try{const r=await api('POST','/admin/transfer-balance',{vendor_id:id});
+    if(!r.ok){let msg=await readErr(r,'Transfer failed');if(/no transferable|no confirmed|balance/i.test(msg))msg='No confirmed balance to transfer yet';toast(msg,'err');return;}
     toast('Transfer initiated','ok');await Promise.all([fetchBalance(),fetchVendors()]);
   }catch(e){toast('Transfer failed','err');}
 }
 async function delVendor(id,name){
   if(!confirm('Delete vendor "'+name+'"?'))return;
-  try{const r=await api('POST','/admin/delete',{vendor_id:id});const d=await r.json().catch(()=>({}));
-    if(!r.ok){toast(d.message||'Delete failed','err');return;}
+  try{const r=await api('POST','/admin/delete',{vendor_id:id});
+    if(!r.ok){toast(await readErr(r,'Delete failed'),'err');return;}
     toast('Vendor deleted','ok');await fetchVendors();
   }catch(e){toast('Delete failed','err');}
 }
