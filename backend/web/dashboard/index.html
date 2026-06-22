@@ -687,9 +687,9 @@ function renderTx(){
   if(!c.length){$('txWrap').innerHTML='<div class="empty-state"><div>No transactions yet</div></div>';return;}
   let h='<table class="data-table"><thead><tr><th>ID</th><th>Vendor</th><th>POS</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>';
   c.forEach(tx=>{
-    const v=tx.Vendor||{},pos=tx.Pos||{};const st=tx.transferred?'transferred':tx.confirmed?'confirmed':tx.accepted?'pending':'awaiting';
+    const v=tx.Vendor||{},pos=tx.Pos||{};const st=tx.Transferred?'transferred':tx.Confirmed?'confirmed':tx.Accepted?'pending':'awaiting';
     const badge='<span class="badge '+st+'">'+st.charAt(0).toUpperCase()+st.slice(1)+'</span>';
-    h+='<tr><td>#'+tx.ID+'</td><td>'+esc(v.name||'-')+'</td><td>'+esc(pos.name||'-')+'</td><td class="mono">'+fmtXMR(tx.Amount)+'</td><td>'+badge+'</td><td class="mono">'+fmtDate(tx.created_at)+'</td></tr>';
+    h+='<tr><td>#'+tx.ID+'</td><td>'+esc(v.Name||'-')+'</td><td>'+esc(pos.Name||'-')+'</td><td class="mono">'+fmtXMR(tx.Amount)+'</td><td>'+badge+'</td><td class="mono">'+fmtDate(tx.CreatedAt)+'</td></tr>';
   });
   h+='</tbody></table>';$('txWrap').innerHTML=h;
 }
@@ -697,8 +697,8 @@ function renderDashTx(){
   const c=dataCache.txs.slice(0,5);
   if(!c.length){$('dashTxWrap').innerHTML='<div class="empty-state">No recent transactions</div>';return;}
   let h='<table class="data-table"><thead><tr><th>ID</th><th>Vendor</th><th>Amount</th><th>Status</th></tr></thead><tbody>';
-  c.forEach(tx=>{const v=tx.Vendor||{};const st=tx.transferred?'transferred':tx.confirmed?'confirmed':tx.accepted?'pending':'awaiting';
-    h+='<tr><td>#'+tx.ID+'</td><td>'+esc(v.name||'-')+'</td><td class="mono">'+fmtXMR(tx.Amount)+'</td><td><span class="badge '+st+'">'+st+'</span></td></tr>';
+  c.forEach(tx=>{const v=tx.Vendor||{};const st=tx.Transferred?'transferred':tx.Confirmed?'confirmed':tx.Accepted?'pending':'awaiting';
+    h+='<tr><td>#'+tx.ID+'</td><td>'+esc(v.Name||'-')+'</td><td class="mono">'+fmtXMR(tx.Amount)+'</td><td><span class="badge '+st+'">'+st+'</span></td></tr>';
   });
   h+='</tbody></table>';$('dashTxWrap').innerHTML=h;
 }
